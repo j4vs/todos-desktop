@@ -1,0 +1,12 @@
+global using MessageBox = System.Windows.MessageBox;
+global using MessageBoxButton = System.Windows.MessageBoxButton;
+global using MessageBoxImage = System.Windows.MessageBoxImage;
+global using SystemParameters = System.Windows.SystemParameters;
+global using DependencyObject = System.Windows.DependencyObject;
+global using RoutedEventArgs = System.Windows.RoutedEventArgs;
+global using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+global using Button = System.Windows.Controls.Button;
+global using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
+global using TextBox = System.Windows.Controls.TextBox;
+global using FrameworkElement = System.Windows.FrameworkElement;
+global using System.IO;

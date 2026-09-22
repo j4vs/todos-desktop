@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "launcherState": {
+    "positionX": 1540,
+    "positionY": 420,
+    "displayId": null
+  },
+  "settings": {
+    "runAtWindowsStartup": true,
+    "hasSeenFirstRunHint": true
+  },
+  "todoWindows": [
+    {
+      "id": "82f9970d-4239-4aac-84e7-602bfdbc8fd6",
+      "title": "Migración del módulo",
+      "colorTheme": "lavender",
+      "positionX": 1168,
+      "positionY": 260,
+      "width": 340,
+      "height": 420,
+      "isVisible": true,
+      "areCompletedTasksExpanded": true,
+      "tasks": [
+        {
+          "id": "b89919c5-5cc6-4ea2-845a-eb200df6dc8a",
+          "text": "Crear los endpoints del backend",
+          "isCompleted": false,
+          "pendingOrder": 0,
+          "completedAt": null,
+          "createdAt": "2026-09-01T00:00:00+00:00",
+          "updatedAt": "2026-09-01T00:00:00+00:00"
+        },
+        {
+          "id": "fa768ad1-14de-4738-95da-25cd9448d835",
+          "text": "Implementar los ajustes en frontend",
+          "isCompleted": false,
+          "pendingOrder": 1,
+          "completedAt": null,
+          "createdAt": "2026-09-01T00:01:00+00:00",
+          "updatedAt": "2026-09-01T00:01:00+00:00"
+        },
+        {
+          "id": "b67fda07-6579-4cfd-94fb-4d365586a156",
+          "text": "Revisar el contrato de respuesta",
+          "isCompleted": true,
+          "pendingOrder": -1,
+          "completedAt": "2026-09-01T00:02:00+00:00",
+          "createdAt": "2026-09-01T00:00:30+00:00",
+          "updatedAt": "2026-09-01T00:02:00+00:00"
+        }
+      ],
+      "createdAt": "2026-09-01T00:00:00+00:00",
+      "updatedAt": "2026-09-01T00:02:00+00:00"
+    }
+  ],
+  "lastSavedAt": "2026-09-01T00:02:00+00:00"
+}

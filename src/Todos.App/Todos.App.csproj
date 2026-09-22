@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>Todos</AssemblyName>
+    <RootNamespace>Todos</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.1.4</Version>
+    <FileVersion>1.1.4.0</FileVersion>
+    <InformationalVersion>1.1.4</InformationalVersion>
+    <AssemblyTitle>Todo's</AssemblyTitle>
+    <Product>Todo's</Product>
+    <Copyright>Copyright © 2026 Todo's</Copyright>
+    <Authors>Todo's</Authors>
+    <Description>Listas de tareas flotantes para Windows.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\icon.png" />
+    <Resource Include="Assets\icon.svg" />
+    <Resource Include="Assets\Icons\*.svg" />
+    <Resource Include="Assets\Fonts\Fredoka\*.ttf" />
+  </ItemGroup>
+
+</Project>

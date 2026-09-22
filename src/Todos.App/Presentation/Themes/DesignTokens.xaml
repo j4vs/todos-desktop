@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <FontFamily x:Key="TodosFontFamily">pack://application:,,,/Todos;component/Assets/Fonts/Fredoka/#Fredoka</FontFamily>
+    <FontFamily x:Key="TodosSymbolFontFamily">Segoe UI Symbol</FontFamily>
+
+    <Color x:Key="TodosBrandColor">#7668BD</Color>
+    <Color x:Key="TodosBrandPressedColor">#6658AE</Color>
+    <Color x:Key="TodosBrandHoverColor">#8476CC</Color>
+    <Color x:Key="TodosTextColor">#302D3A</Color>
+    <Color x:Key="TodosSecondaryTextColor">#716B79</Color>
+    <Color x:Key="TodosDangerColor">#A54459</Color>
+    <Color x:Key="TodosPopupColor">#FFFFFF</Color>
+    <Color x:Key="TodosFocusColor">#6658AE</Color>
+    <Color x:Key="TodosHoverSurfaceColor">#EEE9FA</Color>
+    <Color x:Key="TodosPressedSurfaceColor">#E1D8F5</Color>
+
+    <SolidColorBrush x:Key="TodosBrandBrush" Color="{StaticResource TodosBrandColor}" />
+    <SolidColorBrush x:Key="TodosBrandPressedBrush" Color="{StaticResource TodosBrandPressedColor}" />
+    <SolidColorBrush x:Key="TodosBrandHoverBrush" Color="{StaticResource TodosBrandHoverColor}" />
+    <SolidColorBrush x:Key="TodosTextBrush" Color="{StaticResource TodosTextColor}" />
+    <SolidColorBrush x:Key="TodosSecondaryTextBrush" Color="{StaticResource TodosSecondaryTextColor}" />
+    <SolidColorBrush x:Key="TodosDangerBrush" Color="{StaticResource TodosDangerColor}" />
+    <SolidColorBrush x:Key="TodosPopupBrush" Color="{StaticResource TodosPopupColor}" />
+    <SolidColorBrush x:Key="TodosFocusBrush" Color="{StaticResource TodosFocusColor}" />
+    <SolidColorBrush x:Key="TodosHoverSurfaceBrush" Color="{StaticResource TodosHoverSurfaceColor}" />
+    <SolidColorBrush x:Key="TodosPressedSurfaceBrush" Color="{StaticResource TodosPressedSurfaceColor}" />
+
+    <sys:Double x:Key="TodosCornerSmall">8</sys:Double>
+    <sys:Double x:Key="TodosCornerMedium">11</sys:Double>
+    <sys:Double x:Key="TodosCornerLarge">17</sys:Double>
+    <sys:Double x:Key="TodosCornerWindow">21</sys:Double>
+</ResourceDictionary>

@@ -1,0 +1,37 @@
+# Compilación de .NET y paquetes generados
+bin/
+obj/
+artifacts/
+publish/
+TestResults/
+*.log
+
+# Configuración local de los editores
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pubxml.user
+
+# Temporales locales de desarrollo; la documentación .codex/*.md se versiona
+.codex/.templateengine/
+.codex/tmp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Configuración privada y certificados de firma
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pfx
+*.p12
+
+# Metadatos del sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
