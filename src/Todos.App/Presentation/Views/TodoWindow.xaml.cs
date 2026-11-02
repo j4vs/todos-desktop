@@ -6,6 +6,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using Point = System.Windows.Point;
+using DragDropEffects = System.Windows.DragDropEffects;
 using Todos.Presentation.Themes;
 using Todos.Domain;
 using Todos.Domain.Models;
@@ -20,6 +23,7 @@ public partial class TodoWindow : System.Windows.Window
     private System.Windows.Point _dragStart;
     private Border? _activeDropRow;
     private Grid? _dragPreview;
+    private object _sourceOpacity = DependencyProperty.UnsetValue;
     private System.Windows.Point _dragGrabOffset;
     private System.Windows.Point? _headerDragStart;
     private Border? _sourceRow;
@@ -29,6 +33,9 @@ public partial class TodoWindow : System.Windows.Window
     private TodoTaskViewModel? _groupMenuTask;
     private FrameworkElement? _groupMenuAnchor;
     private TodoGroupViewModel? _groupPendingDeletion;
+    private TodoTaskViewModel? _draggedSubtask;
+    private System.Windows.Point _subtaskDragStart;
+    private readonly Dictionary<Guid, TaskNotesWindow> _notesWindows = [];
 
     public TodoWindow(TodoWindowViewModel viewModel)
     {
@@ -37,26 +44,80 @@ public partial class TodoWindow : System.Windows.Window
         UpdateThemeResources();
         viewModel.PropertyChanged += OnThemePropertyChanged;
         Closing += OnClosing;
-        Closed += (_, _) => { viewModel.PropertyChanged -= OnThemePropertyChanged; viewModel.Dispose(); };
+        Closed += (_, _) =>
+        {
+            CloseNotes();
+            viewModel.PendingTasks.CollectionChanged -= OnTasksChanged;
+            viewModel.CompletedTasks.CollectionChanged -= OnTasksChanged;
+            viewModel.PropertyChanged -= OnThemePropertyChanged; viewModel.Dispose();
+        };
+        viewModel.PendingTasks.CollectionChanged += OnTasksChanged;
+        viewModel.CompletedTasks.CollectionChanged += OnTasksChanged;
         Loaded += OnLoaded;
         GiveFeedback += OnDragGiveFeedback;
         DeleteGroupPopup.Closed += (_, _) => _groupPendingDeletion = null;
         IsVisibleChanged += (_, _) =>
         {
-            if (!IsVisible) { GroupMenuPopup.IsOpen = false; DeleteGroupPopup.IsOpen = false; }
+            if (!IsVisible) { CloseNotes(); GroupMenuPopup.IsOpen = false; DeleteGroupPopup.IsOpen = false; }
         };
     }
 
     private void OnThemePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(TodoWindowViewModel.ColorTheme)) UpdateThemeResources();
+        if (e.PropertyName == nameof(TodoWindowViewModel.ColorTheme))
+        {
+            UpdateThemeResources();
+            foreach (var note in _notesWindows.Values) note.ApplyTheme(ViewModel.ColorTheme);
+        }
     }
 
     private void UpdateThemeResources() => WindowThemeResources.Apply(Resources, ViewModel.ColorTheme);
 
     public bool AllowClose { get; set; }
 
+    public bool ContainsInteraction(System.Windows.Point screenPoint) =>
+        _notesWindows.Values.Any(note => note.IsFileDialogOpen || ScreenInteraction.Contains(note, screenPoint)) ||
+        ScreenInteraction.Contains(this, screenPoint) ||
+        (PalettePopup.IsOpen && ScreenInteraction.Contains(PalettePopup.Child as FrameworkElement, screenPoint)) ||
+        (GroupMenuPopup.IsOpen && ScreenInteraction.Contains(GroupMenuPopup.Child as FrameworkElement, screenPoint)) ||
+        (DeleteGroupPopup.IsOpen && ScreenInteraction.Contains(DeleteGroupPopup.Child as FrameworkElement, screenPoint));
+
     private TodoWindowViewModel ViewModel => (TodoWindowViewModel)DataContext;
+
+    private void CloseNotes()
+    {
+        foreach (var note in _notesWindows.Values.ToArray()) note.Close();
+    }
+    private void OnTasksChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            var ids = ViewModel.PendingTasks.Concat(ViewModel.CompletedTasks).SelectMany(root => new[] { root }.Concat(root.Subtasks))
+                .Select(task => task.Id).ToHashSet();
+            foreach (var pair in _notesWindows.ToArray()) if (!ids.Contains(pair.Key)) pair.Value.Close();
+        }));
+    }
+    private void OnOpenNotes(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TodoTaskViewModel task }) OpenNotes(task);
+        e.Handled = true;
+    }
+    private void OnNotesMenu(object sender, RoutedEventArgs e)
+    {
+        var task = _groupMenuTask; _groupMenuAnchor = null; GroupMenuPopup.IsOpen = false;
+        if (task is not null) OpenNotes(task);
+    }
+    private void OpenNotes(TodoTaskViewModel task)
+    {
+        if (_notesWindows.TryGetValue(task.Id, out var existing)) { existing.Activate(); return; }
+        var note = new TaskNotesWindow(task, ViewModel.ColorTheme) { Owner = this };
+        var area = new Todos.Infrastructure.Windows.WindowsDisplayService().GetBestWorkingArea(Left, Top);
+        note.Width = Math.Min(note.Width, area.Width); note.Height = Math.Min(note.Height, area.Height);
+        note.Left = Math.Clamp(Left + 30, area.Left, Math.Max(area.Left, area.Right - note.Width));
+        note.Top = Math.Clamp(Top + 30, area.Top, Math.Max(area.Top, area.Bottom - note.Height));
+        _notesWindows[task.Id] = note; note.Closed += (_, _) => _notesWindows.Remove(task.Id);
+        note.Show();
+    }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -195,13 +256,19 @@ public partial class TodoWindow : System.Windows.Window
             return;
         }
 
-        var tasks = ViewModel.Groups.Single(group => group.Id == task.GroupId).Tasks;
+        if (e.OriginalSource is DependencyObject origin &&
+            FindAncestor<Border>(origin, row => row.Name is "TaskRowContainer" or "SubtaskRow") is { } owner && !ReferenceEquals(owner, sender)) return;
+
+        var tasks = task.ParentId is { } parentId
+            ? ViewModel.PendingTasks.Concat(ViewModel.CompletedTasks).Single(root => root.Id == parentId).Subtasks
+            : ViewModel.Groups.Single(group => group.Id == task.GroupId).Tasks;
         var currentIndex = tasks.IndexOf(task);
         if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key is Key.Up or Key.Down)
         {
             var offset = e.Key == Key.Up ? -1 : 1;
             var destinationIndex = Math.Clamp(currentIndex + offset, 0, tasks.Count - 1);
-            ViewModel.MovePendingTask(task.Id, destinationIndex);
+            if (task.ParentId is not null) ViewModel.MoveSubtask(task.Id, destinationIndex);
+            else ViewModel.MovePendingTask(task.Id, destinationIndex);
             e.Handled = true;
         }
         else if (e.Key == Key.Delete && ReferenceEquals(Keyboard.FocusedElement, sender))
@@ -280,19 +347,12 @@ public partial class TodoWindow : System.Windows.Window
 
         try
         {
-            _sourceRow = FindAncestor<Border>((DependencyObject)sender, row => row.Name == "TaskRowContainer");
-            ShowDragPreview(_draggedTask);
-            if (_sourceRow is not null) _sourceRow.Opacity = 0.3;
+            BeginRowDrag(FindAncestor<Border>((DependencyObject)sender, row => row.Name == "TaskRowContainer"), _draggedTask);
             System.Windows.DragDrop.DoDragDrop((DependencyObject)sender, _draggedTask, System.Windows.DragDropEffects.Move);
         }
         finally
         {
-            ClearDropCue();
-            ClearGroupCue();
-            DragPreviewLayer.Children.Clear();
-            _dragPreview = null;
-            if (_sourceRow is not null) _sourceRow.Opacity = 1;
-            _sourceRow = null;
+            EndRowDrag();
             _draggedTask = null;
         }
     }
@@ -455,6 +515,29 @@ public partial class TodoWindow : System.Windows.Window
         if (e.Key == Key.Enter) { NewTaskEditor.Focus(); e.Handled = true; }
     }
 
+    private void OnMoveGroupUp(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TodoGroupViewModel group }) ViewModel.MoveGroup(group, -1);
+    }
+
+    private void OnMoveGroupDown(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TodoGroupViewModel group }) ViewModel.MoveGroup(group, 1);
+    }
+
+    private void OnRenameGroup(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element) return;
+        DependencyObject? parent = element;
+        while (parent is not null && parent is not Grid) parent = VisualTreeHelper.GetParent(parent);
+        if (parent is Grid grid && grid.Children.OfType<TextBox>().FirstOrDefault() is { } editor)
+        {
+            Activate();
+            editor.Focus();
+            editor.SelectAll();
+        }
+    }
+
     private void OnRemoveGroup(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: TodoGroupViewModel group } anchor || group.IsGeneral) return;
@@ -510,9 +593,20 @@ public partial class TodoWindow : System.Windows.Window
 
     private void OnGroupMenuClosed(object? sender, EventArgs e)
     {
+        // A previous popup can finish closing after the next menu has opened.
+        if (GroupMenuPopup.IsOpen) return;
+        ClearContextTargets();
         _groupMenuTask = null;
         GroupEditorPanel.Visibility = Visibility.Collapsed;
         _groupMenuAnchor?.Focus();
+    }
+
+    private void ClearContextTargets()
+    {
+        if (_groupMenuTask is not null) _groupMenuTask.IsContextTarget = false;
+        foreach (var task in ViewModel.PendingTasks.Concat(ViewModel.CompletedTasks)
+                     .SelectMany(root => new[] { root }.Concat(root.Subtasks)))
+            task.IsContextTarget = false;
     }
 
     private void OnGroupMenuKeyDown(object sender, KeyEventArgs e)
@@ -528,7 +622,8 @@ public partial class TodoWindow : System.Windows.Window
     private void OnTaskContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         if (sender is not Border { DataContext: TodoTaskViewModel task } row) return;
-        OpenTaskGroupMenu(row, task);
+        var pointer = e.CursorLeft >= 0 && e.CursorTop >= 0 ? Mouse.GetPosition(row) : new Point(24, 20);
+        OpenGroupMenu(row, task, pointer);
         e.Handled = true;
     }
 
@@ -537,18 +632,196 @@ public partial class TodoWindow : System.Windows.Window
         OpenGroupMenu(anchor, task);
     }
 
-    private void OpenGroupMenu(FrameworkElement anchor, TodoTaskViewModel? task)
+    private void OpenGroupMenu(FrameworkElement anchor, TodoTaskViewModel? task, Point? pointer = null)
     {
+        ClearContextTargets();
+        _groupMenuTask = null;
+        _groupMenuAnchor = null;
         GroupMenuPopup.IsOpen = false;
         DeleteGroupPopup.IsOpen = false;
         _groupMenuTask = task;
         _groupMenuAnchor = anchor;
         GroupMenuSurface.DataContext = ViewModel;
-        GroupMenuCaption.Text = task is null ? "Nueva tarea en…" : "Mover a agrupación";
+        GroupMenuCaption.Text = task is null ? "Nueva tarea en…" : task.ParentId is null ? "Opciones de tarea" : "Subtarea";
         CreateGroupMenuButton.Visibility = task is null ? Visibility.Visible : Visibility.Collapsed;
+        GroupMenuItems.Visibility = task?.ParentId is not null ? Visibility.Collapsed : Visibility.Visible;
+        GroupMenuItems.Tag = task is not null;
+        MoveGroupCaption.Visibility = task is not null && task.ParentId is null ? Visibility.Visible : Visibility.Collapsed;
+        AddSubtaskMenuButton.Visibility = task is not null && task.ParentId is null ? Visibility.Visible : Visibility.Collapsed;
+        NotesMenuButton.Visibility = task is null ? Visibility.Collapsed : Visibility.Visible;
+        NotesMenuButton.Content = task?.NotesMenuLabel;
+        EditTaskMenuButton.Visibility = CompleteTaskMenuButton.Visibility = DeleteTaskMenuButton.Visibility = task is null ? Visibility.Collapsed : Visibility.Visible;
+        if (task is not null)
+        {
+            task.IsContextTarget = true;
+            EditTaskMenuButton.Content = task.ParentId is null ? "Editar tarea" : "Editar subtarea";
+            var noun = task.ParentId is not null ? "subtarea" : task.HasSubtasks ? "tarea y subtareas" : "tarea";
+            CompleteTaskMenuButton.Content = (task.IsCompleted ? "Reabrir " : "Completar ") + noun;
+            DeleteTaskMenuButton.Content = "Eliminar " + noun;
+        }
         GroupMenuPopup.PlacementTarget = anchor;
+        GroupMenuPopup.Placement = task is null ? System.Windows.Controls.Primitives.PlacementMode.Left : System.Windows.Controls.Primitives.PlacementMode.RelativePoint;
+        GroupMenuPopup.HorizontalOffset = task is null ? -9 : (pointer ?? new Point(24, 20)).X + 8;
+        GroupMenuPopup.VerticalOffset = task is null ? 0 : (pointer ?? new Point(24, 20)).Y + 6;
         GroupMenuPopup.IsOpen = true;
         Dispatcher.BeginInvoke(() => GroupMenuSurface.MoveFocus(new TraversalRequest(FocusNavigationDirection.First)));
+    }
+
+    private void OnAddSubtaskMenu(object sender, RoutedEventArgs e)
+    {
+        var task = _groupMenuTask;
+        _groupMenuAnchor = null;
+        GroupMenuPopup.IsOpen = false;
+        if (task is null) return;
+        task.BeginSubtaskCapture();
+        FocusSubtaskEditor(task.Id);
+    }
+    private void FocusSubtaskEditor(Guid id) => Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+    {
+        UpdateLayout();
+        Activate();
+        var editor = DescendantsOf<TextBox>(this).FirstOrDefault(box => box.Name == "SubtaskEditor" && box.DataContext is TodoTaskViewModel task && task.Id == id);
+        if (editor?.IsVisible == true) { editor.Focus(); Keyboard.Focus(editor); }
+    }));
+    private void OnNewSubtaskKeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is not TextBox { DataContext: TodoTaskViewModel task }) return;
+        if (e.Key == Key.Enter && task.AddSubtaskCommand.CanExecute(null))
+        { task.AddSubtaskCommand.Execute(null); FocusSubtaskEditor(task.Id); e.Handled = true; }
+        else if (e.Key == Key.Escape) { task.EndSubtaskCapture(); e.Handled = true; }
+    }
+    private void OnCompleteTaskMenu(object sender, RoutedEventArgs e)
+    {
+        var task = _groupMenuTask;
+        GroupMenuPopup.IsOpen = false;
+        if (task is not null) task.IsCompleted = !task.IsCompleted;
+    }
+    private void OnDeleteTaskMenu(object sender, RoutedEventArgs e)
+    {
+        var task = _groupMenuTask;
+        GroupMenuPopup.IsOpen = false;
+        task?.DeleteCommand.Execute(null);
+    }
+    private void OnEditTaskMenu(object sender, RoutedEventArgs e)
+    {
+        var task = _groupMenuTask;
+        _groupMenuAnchor = null;
+        GroupMenuPopup.IsOpen = false;
+        if (task is null) return;
+        task.BeginEditCommand.Execute(null);
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+        {
+            UpdateLayout(); Activate();
+            DescendantsOf<TextBox>(this).FirstOrDefault(box => ReferenceEquals(box.DataContext, task) && box.IsVisible && !box.IsReadOnly)?.Focus();
+        }));
+    }
+    private static IEnumerable<T> DescendantsOf<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is T match) yield return match;
+            foreach (var nested in DescendantsOf<T>(child)) yield return nested;
+        }
+    }
+    private sealed record SubtaskDragItem(Guid Id, Guid ParentId);
+    private void BeginRowDrag(Border? row, TodoTaskViewModel task)
+    {
+        _sourceRow = row;
+        _sourceOpacity = row?.ReadLocalValue(OpacityProperty) ?? DependencyProperty.UnsetValue;
+        ShowDragPreview(task);
+        if (row is not null) row.Opacity = 0.3;
+    }
+    private void EndRowDrag()
+    {
+        ClearDropCue(); ClearGroupCue();
+        DragPreviewLayer.Children.Clear(); _dragPreview = null;
+        if (_sourceRow is not null)
+        {
+            if (_sourceOpacity == DependencyProperty.UnsetValue) _sourceRow.ClearValue(OpacityProperty);
+            else _sourceRow.SetValue(OpacityProperty, _sourceOpacity);
+        }
+        _sourceRow = null; _sourceOpacity = DependencyProperty.UnsetValue;
+    }
+    private void OnSubtaskGripDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TodoTaskViewModel task })
+        {
+            _draggedSubtask = task; _subtaskDragStart = e.GetPosition(this);
+            var row = FindAncestor<Border>((DependencyObject)sender, element => element.Name == "SubtaskRow");
+            _dragGrabOffset = row is null ? new Point() : e.GetPosition(row);
+            e.Handled = true;
+        }
+    }
+    private void OnSubtaskGripMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_draggedSubtask?.ParentId is not { } parentId || e.LeftButton != MouseButtonState.Pressed) return;
+        var position = e.GetPosition(this);
+        if (Math.Abs(position.X - _subtaskDragStart.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(position.Y - _subtaskDragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
+        e.Handled = true;
+        try
+        {
+            BeginRowDrag(FindAncestor<Border>((DependencyObject)sender, row => row.Name == "SubtaskRow"), _draggedSubtask);
+            System.Windows.DragDrop.DoDragDrop((DependencyObject)sender, new SubtaskDragItem(_draggedSubtask.Id, parentId), System.Windows.DragDropEffects.Move);
+        }
+        finally { EndRowDrag(); _draggedSubtask = null; }
+    }
+    private sealed record SubtaskDropTarget(Border Row, int Index, bool After);
+    private SubtaskDropTarget? ResolveSubtaskDrop(Border surface, SubtaskDragItem source, Point pointer)
+    {
+        if (surface.DataContext is not TodoTaskViewModel parent || parent.Id != source.ParentId ||
+            !parent.Subtasks.Any(child => child.Id == source.Id) || pointer.X < 0 || pointer.X > surface.ActualWidth || pointer.Y < 0 || pointer.Y > surface.ActualHeight) return null;
+        var rows = SubtaskRows(surface).Where(row => row.IsVisible && ((TodoTaskViewModel)row.DataContext).Id != source.Id).ToArray();
+        if (rows.Length == 0) return null;
+        var row = rows.FirstOrDefault(item => pointer.Y < item.TranslatePoint(new Point(), surface).Y + item.ActualHeight / 2);
+        var after = row is null; row ??= rows[^1];
+        var destination = parent.Subtasks.IndexOf((TodoTaskViewModel)row.DataContext) + (after ? 1 : 0);
+        if (parent.Subtasks.ToList().FindIndex(child => child.Id == source.Id) < destination) destination--;
+        return new SubtaskDropTarget(row, destination, after);
+    }
+    private void OnSubtaskDragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(TodoTaskViewModel)) is TodoTaskViewModel) return;
+        e.Handled = true;
+        AutoScroll(e); UpdateLayout();
+        var target = sender is Border surface && e.Data.GetData(typeof(SubtaskDragItem)) is SubtaskDragItem source
+            ? ResolveSubtaskDrop(surface, source, e.GetPosition(surface)) : null;
+        ClearGroupCue();
+        if (target is null) { ClearDropCue(); e.Effects = DragDropEffects.None; return; }
+        ShowDropCue(target.Row, target.After); e.Effects = DragDropEffects.Move;
+    }
+    private void OnSubtaskDragLeave(object sender, System.Windows.DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(SubtaskDragItem)) is not SubtaskDragItem || sender is not Border surface) return;
+        e.Handled = true;
+        var point = e.GetPosition(surface);
+        if (point.X < 0 || point.Y < 0 || point.X > surface.ActualWidth || point.Y > surface.ActualHeight) ClearDropCue();
+    }
+    private void OnSubtaskDrop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (e.Data.GetData(typeof(TodoTaskViewModel)) is TodoTaskViewModel) return;
+        e.Handled = true;
+        var target = sender is Border surface && e.Data.GetData(typeof(SubtaskDragItem)) is SubtaskDragItem source
+            ? ResolveSubtaskDrop(surface, source, e.GetPosition(surface)) : null;
+        ClearDropCue();
+        if (target is not null && e.Data.GetData(typeof(SubtaskDragItem)) is SubtaskDragItem item)
+            ApplyAnimatedSubtaskMove(item.ParentId, () => ViewModel.MoveSubtask(item.Id, target.Index));
+    }
+    private static IEnumerable<Border> SubtaskRows(DependencyObject root) => DescendantsOf<Border>(root).Where(row => row.Name == "SubtaskRow");
+    private void ApplyAnimatedSubtaskMove(Guid parentId, Action move)
+    {
+        var previous = SubtaskRows(this).Where(row => row.DataContext is TodoTaskViewModel task && task.ParentId == parentId)
+            .ToDictionary(row => ((TodoTaskViewModel)row.DataContext).Id, row => row.TranslatePoint(new Point(), this).Y);
+        move(); UpdateLayout();
+        if (!AnimationSettings.AreAnimationsEnabled) return;
+        foreach (var row in SubtaskRows(this).Where(row => row.DataContext is TodoTaskViewModel task && task.ParentId == parentId))
+        {
+            if (!previous.TryGetValue(((TodoTaskViewModel)row.DataContext).Id, out var oldY) || FindNamedDescendant<Grid>(row, "SubtaskRowContent") is not { } content) continue;
+            var offset = oldY - row.TranslatePoint(new Point(), this).Y;
+            if (Math.Abs(offset) < .5) continue;
+            TaskDragVisualPolicy.EnsureMutableTranslateTransform(content).BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(offset, 0, TimeSpan.FromMilliseconds(180)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+        }
     }
 
     private void ClearGroupCue()

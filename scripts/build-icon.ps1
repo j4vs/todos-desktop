@@ -1,5 +1,5 @@
 param(
-    [string] $SourcePath = (Join-Path $PSScriptRoot '..\src\Todos.App\Assets\icon.png'),
+    [string] $SourcePath = (Join-Path $PSScriptRoot '..\src\Todos.App\Assets\icon.svg'),
     [string] $DestinationPath = (Join-Path $PSScriptRoot '..\src\Todos.App\Assets\icon.ico')
 )
 
@@ -10,22 +10,55 @@ $source = [System.IO.Path]::GetFullPath($SourcePath)
 $destination = [System.IO.Path]::GetFullPath($DestinationPath)
 $sizes = @(16, 20, 24, 32, 40, 48, 64, 128, 256)
 
-$bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-$bitmap.BeginInit()
-$bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-$bitmap.UriSource = [Uri]::new($source)
-$bitmap.EndInit()
-$bitmap.Freeze()
+$isVector = [System.IO.Path]::GetExtension($source) -eq '.svg'
+if ($isVector) {
+    $svg = [xml](Get-Content -LiteralPath $source -Raw)
+    $viewBox = @($svg.DocumentElement.GetAttribute('viewBox').Split(' ') | ForEach-Object { [double]::Parse($_, [cultureinfo]::InvariantCulture) })
+    $brushConverter = [System.Windows.Media.BrushConverter]::new()
+}
+else {
+    $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+    $bitmap.BeginInit()
+    $bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+    $bitmap.UriSource = [Uri]::new($source)
+    $bitmap.EndInit()
+    $bitmap.Freeze()
+}
 
-$images = foreach ($size in $sizes) {
+function Render-Icon([int]$size) {
     $visual = [System.Windows.Media.DrawingVisual]::new()
-    [System.Windows.Media.RenderOptions]::SetBitmapScalingMode(
-        $visual,
-        [System.Windows.Media.BitmapScalingMode]::HighQuality)
     $context = $visual.RenderOpen()
-    $context.DrawImage($bitmap, [System.Windows.Rect]::new(0, 0, $size, $size))
+    if ($isVector) {
+        $context.PushTransform([System.Windows.Media.ScaleTransform]::new($size / $viewBox[2], $size / $viewBox[3]))
+        foreach ($element in $svg.DocumentElement.ChildNodes) {
+            if ($element -isnot [System.Xml.XmlElement]) { continue }
+            $fill = $brushConverter.ConvertFromString($element.GetAttribute('fill'))
+            switch ($element.LocalName) {
+                'circle' {
+                    $stroke = $brushConverter.ConvertFromString($element.GetAttribute('stroke'))
+                    $pen = [System.Windows.Media.Pen]::new($stroke, [double]::Parse($element.GetAttribute('stroke-width'), [cultureinfo]::InvariantCulture))
+                    $center = [System.Windows.Point]::new([double]$element.GetAttribute('cx'), [double]$element.GetAttribute('cy'))
+                    $radius = [double]$element.GetAttribute('r')
+                    $context.DrawEllipse($fill, $pen, $center, $radius, $radius)
+                }
+                'path' {
+                    $geometry = [System.Windows.Media.Geometry]::Parse($element.GetAttribute('d')).Clone()
+                    if ($element.HasAttribute('transform')) {
+                        $matrixText = $element.GetAttribute('transform').Replace('matrix(', '').Replace(')', '')
+                        $geometry.Transform = [System.Windows.Media.MatrixTransform]::new([System.Windows.Media.Matrix]::Parse($matrixText))
+                    }
+                    $context.DrawGeometry($fill, $null, $geometry)
+                }
+                default { throw "Elemento SVG no soportado por el icono: $($element.LocalName)" }
+            }
+        }
+        $context.Pop()
+    }
+    else {
+        [System.Windows.Media.RenderOptions]::SetBitmapScalingMode($visual, [System.Windows.Media.BitmapScalingMode]::HighQuality)
+        $context.DrawImage($bitmap, [System.Windows.Rect]::new(0, 0, $size, $size))
+    }
     $context.Close()
-
     $render = [System.Windows.Media.Imaging.RenderTargetBitmap]::new(
         $size,
         $size,
@@ -37,8 +70,18 @@ $images = foreach ($size in $sizes) {
     $encoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($render))
     $stream = [System.IO.MemoryStream]::new()
     $encoder.Save($stream)
-    [pscustomobject]@{ Size = $size; Bytes = $stream.ToArray() }
+    $bytes = $stream.ToArray()
     $stream.Dispose()
+    return ,$bytes
+}
+
+# Render every ICO size directly from the vector, including small tray sizes.
+$images = foreach ($size in $sizes) {
+    [pscustomobject]@{ Size = $size; Bytes = (Render-Icon $size) }
+}
+if ($isVector) {
+    $pngPath = [System.IO.Path]::ChangeExtension($source, '.png')
+    [System.IO.File]::WriteAllBytes($pngPath, (Render-Icon 512))
 }
 
 $outputDirectory = [System.IO.Path]::GetDirectoryName($destination)

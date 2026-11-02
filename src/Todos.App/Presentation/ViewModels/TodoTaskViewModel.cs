@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using Todos.Domain;
 using Todos.Domain.Models;
 using Todos.Presentation.Mvvm;
 
@@ -14,14 +16,44 @@ public sealed class TodoTaskViewModel : ObservableObject
     private bool _isEditing;
     private string _editText;
     private string _groupName = "General";
+    private bool _isContextTarget;
+    public bool IsContextTarget { get => _isContextTarget; set => SetProperty(ref _isContextTarget, value); }
+    private string _notesSaveStatus = "Guardado";
+    public string NotesSaveStatus { get => _notesSaveStatus; set => SetProperty(ref _notesSaveStatus, value); }
+    public string NotesMarkdown
+    {
+        get => _item.NotesMarkdown;
+        set
+        {
+            value ??= string.Empty;
+            if (_item.NotesMarkdown == value) return;
+            _item.NotesMarkdown = value;
+            _item.UpdatedAt = DateTimeOffset.UtcNow;
+            NotesSaveStatus = "Guardando…";
+            OnPropertyChanged(); OnPropertyChanged(nameof(HasNotes)); OnPropertyChanged(nameof(NotesMenuLabel));
+            _stateChanged?.Invoke();
+        }
+    }
+    public bool HasNotes => !string.IsNullOrWhiteSpace(NotesMarkdown);
+    public string NotesMenuLabel => HasNotes ? "Ver nota" : "Agregar nota";
 
     public TodoTaskViewModel(
         TodoTaskItem item,
         Action<Guid, bool> setCompleted,
         Action<TodoTaskViewModel> delete,
-        Func<Guid, string, bool> saveEdit)
+        Func<Guid, string, bool> saveEdit, Guid? parentId = null, Action? stateChanged = null, Action<Guid, string>? addSubtask = null)
     {
         _item = item;
+        ParentId = parentId;
+        _stateChanged = stateChanged;
+        _addSubtask = addSubtask;
+        AddSubtaskCommand = new RelayCommand(() =>
+        {
+            if (string.IsNullOrWhiteSpace(NewSubtaskText)) return;
+            _addSubtask?.Invoke(Id, NewSubtaskText);
+            NewSubtaskText = string.Empty;
+        }, () => !string.IsNullOrWhiteSpace(NewSubtaskText));
+        ToggleSubtasksCommand = new RelayCommand(() => AreSubtasksExpanded = !AreSubtasksExpanded);
         _setCompleted = setCompleted;
         _delete = delete;
         _saveEdit = saveEdit;
@@ -32,6 +64,42 @@ public sealed class TodoTaskViewModel : ObservableObject
         SaveEditCommand = new RelayCommand(() => SaveEdit());
         CancelEditCommand = new RelayCommand(CancelEdit);
         DeleteCommand = new RelayCommand(() => _delete(this));
+    }
+
+    private readonly Action? _stateChanged;
+    private readonly Action<Guid, string>? _addSubtask;
+    private string _newSubtaskText = string.Empty;
+    private bool _isSubtaskEditorVisible;
+    public Guid? ParentId { get; }
+    public ObservableCollection<TodoTaskViewModel> Subtasks { get; } = [];
+    public RelayCommand AddSubtaskCommand { get; }
+    public RelayCommand ToggleSubtasksCommand { get; }
+    public bool HasSubtasks => Subtasks.Count > 0;
+    public bool HasSubtaskControls => HasSubtasks || IsSubtaskEditorVisible;
+    public string SubtaskProgress => $"{Subtasks.Count(child => child.IsCompleted)}/{Subtasks.Count}";
+    public bool AreSubtasksExpanded
+    {
+        get => _item.AreSubtasksExpanded;
+        set { if (_item.AreSubtasksExpanded == value) return; _item.AreSubtasksExpanded = value; OnPropertyChanged(); _stateChanged?.Invoke(); }
+    }
+    public bool IsSubtaskEditorVisible
+    {
+        get => _isSubtaskEditorVisible;
+        private set { if (SetProperty(ref _isSubtaskEditorVisible, value)) OnPropertyChanged(nameof(HasSubtaskControls)); }
+    }
+    public string NewSubtaskText
+    {
+        get => _newSubtaskText;
+        set { if (SetProperty(ref _newSubtaskText, value.Length > AppConstants.MaxTaskTextLength ? value[..AppConstants.MaxTaskTextLength] : value)) AddSubtaskCommand.NotifyCanExecuteChanged(); }
+    }
+    public void BeginSubtaskCapture() { AreSubtasksExpanded = true; IsSubtaskEditorVisible = true; }
+    public void EndSubtaskCapture() { IsSubtaskEditorVisible = false; NewSubtaskText = string.Empty; }
+    public void RefreshSubtasks(IEnumerable<TodoTaskViewModel> children)
+    {
+        Subtasks.Clear();
+        foreach (var child in children) Subtasks.Add(child);
+        OnPropertyChanged(nameof(HasSubtasks)); OnPropertyChanged(nameof(HasSubtaskControls));
+        OnPropertyChanged(nameof(SubtaskProgress)); OnPropertyChanged(nameof(AreSubtasksExpanded));
     }
 
     public Guid Id => _item.Id;

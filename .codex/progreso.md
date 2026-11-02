@@ -4,7 +4,198 @@ Este documento registra el cierre verificable de cada etapa. Una etapa solo se
 marca como completada después de implementar o documentar sus entregables y
 ejecutar sus validaciones.
 
-## Resumen
+## Versión actual — 1.8.2 (2026-10-14)
+
+Reporte de minimización al pulsar dentro y cierre inmediato del menú principal, posiblemente tras tiempo/hibernación. Corrección de detección por HWND/bounds físicos, renovación del hook en Resume/DisplaySettingsChanged e invalidación por generación de acciones anteriores a suspensión, renovación o cierre. Conserva auto-minimización, snapshot del clic principal, popups/espacios transparentes y esquema 5.
+
+Build limpio: 0 advertencias y 0 errores después de refrescar restauración. Suite 65/65. Pruebas WPF en segundo monitor: contextos DPI Unaware/System/PerMonitor con restauración del contexto original, clics en listas/popups/notas, clic externo, menú recién abierto, recuperación simulada, descarte de acciones antiguas e interrupción durante preparación/disposición. Se reprodujo la clasificación incorrecta original cuando un resize nativo precede el layout WPF: geometría antigua False y detección nueva True para un punto interno. Evidencia artifacts/outside-click-1.8.2-review/click-recovery.txt y artifacts/outside-click-1.8.2-tests.txt. No se hibernó la computadora; el disparador exacto del reporte y la recuperación tras hibernación real siguen pendientes de revisión del usuario.
+
+Portable publish/Todos-1.8.2-win-x64.zip, versión extraída 1.8.2.0 y hashes correctos. Inicio/reinicio nativos con datos aislados. Evidencia artifacts/outside-click-1.8.2-package. Sin alterar la instancia ni los datos del usuario.
+
+## Versión anterior — 1.8.1
+
+Portable extraído 1.8.1.0 y hashes EXE/ZIP verificados. Dos inicios nativos aislados con salida 0 conservaron esquema 5, preferencias, asociación, grupos, IDs, árboles, orden, progreso, plegado y notas exactas. Evidencia artifacts/subtask-drag-1.8.1-package/verification.txt. Paquete publish/Todos-1.8.1-win-x64.zip.
+
+Arrastre de subtareas comparte preview y atenuación con tareas; cálculo continuo en SubtaskDropSurface, indicador independiente recto sin cambiar altura/borde, márgenes de inserción, scroll y animación. Limpieza común al soltar/cancelar con restauración de opacidad local/estilo. Se conserva esquema 5 y notas.
+
+Compilación sin errores; 65/65 pruebas. Regresión WPF ampliada: eventos repetidos DragOver/DragLeave internos sin apagar indicador, altura/borde estables, preview con píxeles reales/tamaño correcto, origen al 30 %, restauración de estilo y limpieza, inserción en margen y reordenamiento. Renders en artifacts/subtask-drag-1.8.1-review; informe artifacts/subtask-drag-1.8.1-tests.txt. Ventanas en segundo monitor. Compilación/publicación produjo NU1900 por consulta de auditoría de NuGet no disponible; dependencia Markdig sin cambios. Comprobación física del arrastre queda pendiente del usuario.
+
+## Versión anterior — 1.8.0 (2026-10-12)
+
+Una nota Markdown por tarea/subtarea, ventana de edición/visualización en pestañas y acceso contextual/ícono. Guardado automático con confirmación de escritura real; importación/exportación .md con confirmación de reemplazo. Render nativo, sin imágenes ni HTML ejecutable; tema/fuentes en vivo. Notas preservadas en grupos, completado, eliminación/deshacer y Papelera. La nota y sus diálogos pertenecen a la lista para auto-minimización; ocultar la lista cierra sus notas conservando cambios. Esquema 5 migra 1–4.
+
+Build sin advertencias ni errores; 65/65 pruebas. Cobertura: migración, notas nulas/dañadas, Unicode/espacios, snapshot profundo, persistencia/reinicio, grupos/Papelera/deshacer, importación cancelada/confirmada, exportación, fallo de escritura y aviso de guardado obsoleto. WPF: pestañas, foco, formato/casillas/tablas/código, accesos, nota única, tema/letra, cierre al borrar/ocultar y protección de minimización automática. Ventanas de notas comprobadas en segundo monitor. Renders revisados en artifacts/notes-1.8.0-review; informe artifacts/notes-1.8.0-tests.txt. No certifica interacción física de ratón ni escalas mixtas.
+
+Portable 1.8.0.0 extraído y hashes EXE/ZIP correctos. Cuatro ejecuciones nativas aisladas con salida 0 comprobaron migración 4 a 5 y reinicio con notas, conservando preferencias, asociación, listas, grupos, IDs, orden, progreso, plegado y Markdown exacto de principales/hijos. Evidencia artifacts/notes-1.8.0-package/verification.txt. Paquete publish/Todos-1.8.0-win-x64.zip, incluyendo avisos/licencia de Markdig. Sin modificar datos ni detener la instancia del usuario.
+
+## Versión anterior — 1.7.2 (2026-10-12)
+
+Portable generado con las correcciones de resaltado exclusivo y menú sin nombre de tarea/subtarea. Se mantiene esquema 4. Solo compilación y empaquetado por solicitud del usuario, sin ejecutar pruebas ni abrir el programa; revisión visual pendiente. Paquete publish/Todos-1.7.2-win-x64.zip y sumas publish/Todos-1.7.2-win-x64.sha256.
+
+## Versión anterior — 1.7.1 (2026-10-12)
+
+Corrección posterior en código: al abrir un menú se limpia explícitamente el resaltado de todas las tareas y subtareas de la lista antes de seleccionar la nueva; el cierre tardío de un popup anterior no borra la selección del menú recién abierto. Retirado el nombre de la tarea del menú. Por solicitud del usuario, solo compilación Release: 0 errores y 0 advertencias, sin ejecutar pruebas ni abrir ventanas. Verificación visual a cargo del usuario. El ZIP 1.7.1 mencionado abajo corresponde al cierre anterior y no se regeneró en esta corrección.
+
+Menú contextual junto al cursor y resaltado transitorio de tarea/subtarea; título y acciones claras Editar, Completar/Reabrir, Eliminar. Principales: Agregar subtarea y «Mover a [grupo]». Conversión retirada de la interfaz. Flecha/avance junto al checkbox en pendientes y completadas. Etiqueta del principal oculta al comenzar arrastre. Se mantiene esquema 4 y datos existentes.
+
+Build limpio, 60/60 pruebas. Eventos WPF comprobaron posición junto al punto de clic, resaltado y limpieza al cerrar, edición/foco de principal, completar/deshacer, eliminar/deshacer, destinos explícitos, avance en línea y ocultación de etiqueta al iniciar arrastre. Las ventanas de revisión se colocaron en el monitor secundario y se verificó su monitor real al cargar. Renders revisados en artifacts/context-1.7.1-review; informe artifacts/context-1.7.1-tests.txt. Interacción física de ratón y escalas mixtas sigue pendiente.
+
+ZIP extraído 1.7.1.0 y hashes EXE/ZIP correctos. Dos ejecuciones nativas aisladas con salida 0 conservaron esquema 4, preferencias, asociación, IDs, grupos y árboles de tareas con orden, progreso y plegado. Evidencia artifacts/context-1.7.1-package/verification.txt. Paquete publish/Todos-1.7.1-win-x64.zip. Sin alterar datos ni detener la instancia del usuario.
+
+## Versión anterior — 1.7.0 (2026-10-12)
+
+Subtareas de un nivel: contador/plegado, captura consecutiva con Enter, edición, arrastre/teclado dentro de principal y conversión desde tarea sin pasos del mismo grupo. Completar todos los pasos completa la principal; completar principal cascada con Deshacer de estado. Reapertura conserva coherencia. Borrado/deshacer, limpieza de completadas, grupos y papelera preservan el árbol y su contexto. Esquema 4 migra 1–3 y evita pérdida al abrir con versiones antiguas.
+
+Build sin advertencias ni errores; 60/60 pruebas. Se probaron ciclos/conversión inválida, progreso mixto/undo sin perder edición, preservación de raíces y pasos, retorno a General al quitar grupos, snapshot/reinicio/plegado/Papelera y migración. Eventos WPF verifican menú, captura/foco/Enter, drag/drop de pasos y conversión. Renders revisados en artifacts/subtasks-1.7.0-review; evidencia artifacts/subtasks-1.7.0-tests.txt. Prueba física de ratón y escalas mixtas pendiente.
+
+Portable 1.7.0.0 extraído del ZIP; SHA-256 de EXE y ZIP verificados. Ejecuciones nativas con guardado real en datos aislados comprobaron migración 3→4 conservando tres tareas y dos reinicios conservando IDs, orden, progreso 1/3 y plegado de subtareas. Evidencia artifacts/subtasks-1.7.0-package. Paquete publish/Todos-1.7.0-win-x64.zip. La revisión visual corresponde a renders WPF, no a interacción física de ratón.
+
+## Versión anterior — 1.6.0 (2026-10-12)
+
+Configuración de letra con −/+ (80–140 %), tamaño principal 40/52/68 y espaciado .75/1/1.3. Recursos dinámicos globales actualizan fuentes, márgenes, padding y alturas en listas, menús, etiquetas y papelera; fuente del menú de notificación actualizada. Preferencias normalizadas y copiadas en snapshot, esquema 3 compatible. Propiedad de tamaño separada evita que el tamaño nativo de WPF rompa la actualización del principal.
+
+Build sin errores ni advertencias; 54/54 pruebas. Persistencia/reinicio, valores por defecto, límites, invalidación de recursos, tamaños 40/52/68, vuelta a valores actuales y extremos de fuente/espaciado verificados. Renders revisados en artifacts/appearance-1.6.0-review y evidencia artifacts/appearance-1.6.0-tests.txt. Interacción física, dos monitores y escalas mixtas siguen pendientes.
+
+Portable 1.6.0.0 extraído del ZIP, SHA-256 de EXE y ZIP verificados. Arranque y reinicio con preferencias grandes guardadas aprobados usando datos aislados. La captura nativa de ventana en modo render volvió a salir transparente; la apariencia se revisó con los renders WPF de la suite, no con esa captura. Paquete publish/Todos-1.6.0-win-x64.zip.
+
+## Versión anterior — 1.5.0 (2026-10-10)
+
+Minimizar entre Salir y Configuración oculta principal y menús sin terminar el proceso ni cerrar listas. Mostrar botón / Ocultar botón sustituye Mostrar Todo's en notificación y se sincroniza con la visibilidad real. Doble clic recupera el principal. Visibilidad de sesión, esquema 3 sin cambios.
+
+Build sin advertencias ni errores; 52/52 pruebas. Se verificaron quinta acción y orden, cierre de popups/hover, recuperación, asociación y menú de notificación dinámico con creación y salida conservadas. Evidencia artifacts/minimize-1.5.0-tests.txt y renders revisados en artifacts/minimize-1.5.0-review. Interacción física del área de notificación pendiente.
+
+Portable 1.5.0.0 extraído del ZIP, hashes de EXE y ZIP verificados. Arranque de prueba aprobado con datos aislados. La captura del menú en modo render del portable salió incompleta/transparente y no certifica su apariencia; el render WPF de la suite sí muestra las cinco acciones completas (artifacts/minimize-1.5.0-review/launcher-actions.png). Paquete publish/Todos-1.5.0-win-x64.zip.
+
+## Versión anterior — 1.4.0 (2026-10-10)
+
+Menú de lista oculta anclado al círculo. Papelera de una fila por lista, flecha restaurar alineada. Grupos personalizados con lápiz y flechas para cambiar nombre y orden; General fijo. Vaciar completadas con deshacer del lote. Liberación idempotente del temporizador de deshacer al cerrar.
+
+Build sin errores ni advertencias y 51/51 pruebas aprobadas, incluyendo reordenamiento/renombrado después de reiniciar y limpieza/deshacer conservando agrupación, fechas e identidad. Eventos WPF verifican acciones de grupos y anclaje del menú. Renders revisados en artifacts/groups-1.4.0-review; evidencia artifacts/groups-1.4.0-tests.txt. Revisión física de ratón y multimonitor pendiente.
+
+Portable 1.4.0.0 extraído del ZIP; SHA-256 de EXE y ZIP verificados. Arranque de prueba y render nativo de papelera aprobados con datos aislados, sin modificar datos del usuario ni inicio con Windows. Evidencia artifacts/groups-1.4.0-package/papelera.png. Paquete publish/Todos-1.4.0-win-x64.zip.
+
+## Versión anterior — 1.3.1 (2026-10-10)
+
+Ícono circular morado con borde y check blancos. SVG, PNG e ICO actualizados;
+ICO contiene nueve tamaños dibujados directamente del vector, todos con esquinas
+transparentes verificadas. EXE y notificación comparten el recurso del ejecutable.
+Evidencia de suite: artifacts/icon-1.3.1-tests.txt.
+Build limpio y 49/49 pruebas aprobadas. ZIP 1.3.1 extraído con versión 1.3.1.0,
+SHA-256 de ZIP/EXE correctos. Windows extrajo el ícono circular de 32 px del EXE,
+con esquinas transparentes, mediante la misma API usada para notificación.
+Preview: artifacts/icon-1.3.1-package/icon-extracted.png. Paquete:
+publish/Todos-1.3.1-win-x64.zip. La caché visual de Explorer no se modificó.
+
+## Versión anterior — 1.3.0 (2026-10-10)
+
+Papelera persistente de listas completas. Borrado directo desde ventana o menú
+contextual de lista oculta. Cuarta acción entre Configuración y Nueva lista.
+Restauración con identidad, grupos, colores y tareas intactos; eliminación
+definitiva con confirmación propia. Schema 3 migra datos previos.
+Build limpio; 49/49 pruebas. Renders en artifacts/recycle-bin-1.3.0-review y
+evidencia de suite en artifacts/recycle-bin-1.3.0-tests.txt. Revisión física pendiente.
+Portable 1.3.0.0 extraído del ZIP y SHA-256 de ZIP/EXE verificados. Render nativo
+de Papelera y smoke con papelera/estado anterior terminaron con código 0 en
+artifacts/recycle-bin-1.3.0-package. Conservó una lista con tres tareas y un grupo;
+la carga de esquema 2 se guardó como 3. Render no modificó su fixture y los modos
+aislados no usan listas reales ni modifican el inicio con Windows.
+Paquete: publish/Todos-1.3.0-win-x64.zip; EXE: publish/win-x64-1.3.0/Todos.exe.
+
+## Versión anterior — 1.2.3 (2026-10-10)
+
+Botones flotantes con Accent un 10 % más oscuro y checks blancos más pequeños:
+principal 27 × 22, ocultas 20 × 17. Bordes de 2 y 1,5 px. Ventanas conservadas.
+Evidencia: artifacts/launcher-1.2.3-review y artifacts/launcher-1.2.3-tests.txt.
+Build Release sin errores ni advertencias; 45/45 pruebas aprobadas.
+Portable 1.2.3.0 extraído del ZIP: SHA-256 de ZIP/EXE correctos; render de siete
+colores y smoke aislado terminaron con código 0, fixture intacto. Renders en
+artifacts/launcher-1.2.3-package, paquete en publish/Todos-1.2.3-win-x64.zip.
+
+## Versión anterior — 1.2.2 (2026-10-10)
+
+Checks negros en principal y ocultas; RGB del fondo pastel reducido un 10 % solo
+en esos botones, conservando ventanas y acciones. Configuración activada usa
+checkbox-checked.svg mediante trigger específico; tareas mantienen check.svg.
+Renders y suite: artifacts/launcher-1.2.2-review y artifacts/launcher-1.2.2-tests.txt.
+Build Release sin errores ni advertencias, 45/45 pruebas aprobadas. Renders
+revisados: checks negros y casilla marcada de configuración centrada.
+Portable publish/win-x64-1.2.2/Todos.exe: render y smoke aislados terminaron
+con código 0, fixture persistido intacto. ZIP publish/Todos-1.2.2-win-x64.zip
+extraído con FileVersion 1.2.2.0 y hashes de ZIP/EXE coincidentes con el SHA-256.
+
+## Versión anterior — 1.2.1 (2026-10-10)
+
+Ajustes autorizados: etiquetas laterales de 13 px con cambio de lado según
+espacio, título principal solo en hover, despliegue tras un segundo, configuración
+centrada que oculta acciones, scroll de 10 px con thumb redondeado de 6 px,
+color idéntico al Background de la lista y check.svg en principal/ocultas/tareas.
+
+Se captura la intención de clic antes de la minimización externa: si la lista
+asociada estaba visible con auto-minimización, el clic solo la oculta. Se conserva
+el acceso rápido para el siguiente clic. Nueva regresión comprueba este orden.
+
+Build Release: 0 errores y 0 advertencias. Suite: 45/45 aprobadas, incluida
+comparación de color, alineación de configuración, título en hover, cambio de
+lado de etiquetas y desplazamiento funcional con 100 listas ocultas.
+Evidencia local: artifacts/launcher-1.2.1-tests.txt y renders en
+artifacts/launcher-1.2.1-review. No sustituye prueba física de ratón/multimonitor.
+Paquete actualizado: publish/Todos-1.2.1-win-x64.zip y publish/win-x64-1.2.1/Todos.exe.
+ZIP extraído verificado: FileVersion 1.2.1.0, SHA-256 de ZIP/EXE coincidentes.
+Render y smoke del EXE portable terminaron con código 0 en carpetas aisladas de
+artifacts/launcher-1.2.1-package. La asociación y fixture persistido se conservaron
+sin cambios; inicio vacío guardó esquema 2 y auto-minimización false. No se usaron
+datos reales ni se cambió el registro de inicio Windows.
+
+## Versión anterior — 1.2.0 (2026-10-10)
+
+Alcance aprobado por el usuario y completado con sus dos correcciones: eliminar
+la lista asociada devuelve el botón al morado sin seleccionar otra, y el clic
+izquierdo sin asociación abre las ocultas igual que el hover.
+
+### Implementación
+
+- Botón circular de Ellipse/Path, borde/check blancos y morado original #9285D8.
+- Acceso directo a la última lista minimizada, título/color actualizados y
+  asociación persistida al reiniciar; referencia inexistente se normaliza a null.
+- Hover continuo de dos segundos para ocultas; clic derecho reemplaza por Salir,
+  Configuración y Nueva lista. Las acciones prevalecen sobre hover.
+- Círculos secundarios de 42 × 42 y etiquetas, transición de 150 ms, cierre
+  animado con clic fuera/Escape, colocación adaptativa y scroll con muchas listas.
+- Configuración conserva el estilo anterior para inicio Windows y minimización
+  automática, apagada inicialmente. Preferencia y asociación incluidas en snapshots.
+- Observación de clics externos sin consumir entrada ni polling. Respeto de popups
+  propios y confirmaciones. Captura previa evita ocultar una lista recién recuperada.
+- Se mantiene esquema 2. SDK 8.0.422 fijado en global.json y script de publicación
+  admite OutputDirectory para generar una versión sin reemplazar un EXE en uso.
+
+### Validación local completada
+
+- Build Release: 0 errores, 0 advertencias; suite: 44/44 aprobadas.
+- Persistencia/snapshot/reinicio, compatibilidad de campos ausentes, eliminación
+  sin fallback, prioridad de acciones y recuperación de una asociación ya visible.
+- WPF real: círculo sin bitmap, clic derecho, dos opciones de configuración,
+  cierre después de animación, popups internos y scroll con 30 listas.
+- Controlador real con ventanas WPF: clic interno conserva la lista; preferencia
+  desactivada no oculta; clic externo oculta y actualiza asociación; una lista
+  recuperada después de capturar el clic permanece visible.
+- Renders revisados: artifacts/launcher-1.2.0-review y prueba guardada en
+  artifacts/launcher-1.2.0-tests.txt. El render vectorial usa dimensiones/DPI reales.
+- Paquete publish/Todos-1.2.0-win-x64.zip, SHA-256 y EXE
+  publish/win-x64-1.2.0/Todos.exe generados. ZIP extraído: versión 1.2.0.0,
+  hashes verificados, smoke exit 0 y JSON nuevo de esquema 2 con auto-minimizar false.
+- Render del EXE extraído con dos listas ocultas, grupos, asociación y preferencia
+  activa: exit 0, recursos correctos y fixture sin modificaciones. Evidencia en
+  artifacts/launcher-1.2.0-package. Modos aislados no modifican inicio Windows real.
+- La ejecución autocontenida requirió validación fuera del sandbox; se usaron
+  exclusivamente carpetas de prueba del workspace y una identidad de instancia propia.
+
+### Revisión física pendiente
+
+Las pruebas usan eventos, coordenadas y renders WPF. Sigue pendiente el recorrido
+con ratón de hover prolongado, arrastre, clic fuera frente a otras aplicaciones
+y monitores físicos con DPI mixto; no se presenta el build como prueba de esos gestos.
+
+## Resumen histórico del MVP 1.0.0
 
 | Etapa | Estado | Evidencia principal |
 |---|---|---|

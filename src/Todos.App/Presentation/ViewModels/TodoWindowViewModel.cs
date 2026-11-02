@@ -15,8 +15,9 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
     private bool _areCompletedTasksExpanded;
     private bool _isUndoVisible;
     private string _undoMessage = string.Empty;
-    private TodoTaskItem? _lastDeletedTask;
+    private IReadOnlyList<TodoTaskItem> _lastDeletedTasks = [];
     private CancellationTokenSource? _undoCancellation;
+    private Action? _undoAction;
     private TodoGroupViewModel? _selectedGroup;
     private string _newGroupName = string.Empty;
     private string _groupError = string.Empty;
@@ -36,6 +37,7 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
         DeleteCommand = new RelayCommand(requestDelete);
         SelectThemeCommand = new RelayCommand<TodoColorTheme>(SelectTheme);
         AddTaskCommand = new RelayCommand(AddTask, CanAddTask);
+        ClearCompletedCommand = new RelayCommand(ClearCompleted, () => HasCompletedTasks);
         ToggleCompletedSectionCommand = new RelayCommand(ToggleCompletedSection);
         UndoDeleteCommand = new RelayCommand(UndoDelete, () => IsUndoVisible);
         AddGroupCommand = new RelayCommand(AddGroup, () => !string.IsNullOrWhiteSpace(NewGroupName));
@@ -46,6 +48,18 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<TodoGroupViewModel> Groups { get; } = [];
     public RelayCommand AddGroupCommand { get; }
+    public RelayCommand ClearCompletedCommand { get; }
+
+    public void MoveGroup(TodoGroupViewModel group, int direction)
+    {
+        if (group.Id is not { } id) return;
+        var index = _state.Groups.FindIndex(item => item.Id == id);
+        var destination = index + direction;
+        if (destination < 0 || destination >= _state.Groups.Count) return;
+        TodoListOperations.MoveGroup(_state, id, destination, DateTimeOffset.UtcNow);
+        RefreshTasks();
+        _stateChanged();
+    }
     public TodoGroupViewModel? SelectedGroup
     {
         get => _selectedGroup;
@@ -108,6 +122,26 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
         TodoListOperations.MoveTaskToGroup(_state, taskId, groupId, destinationIndex, DateTimeOffset.UtcNow);
         RefreshTasks();
         _stateChanged();
+    }
+
+    public void AddSubtask(Guid parentId, string text)
+    {
+        SubtaskOperations.Add(_state, parentId, text, DateTimeOffset.UtcNow);
+        RefreshTasks(); _stateChanged();
+    }
+    public void MoveSubtask(Guid childId, int index)
+    {
+        SubtaskOperations.Move(_state, childId, index, DateTimeOffset.UtcNow);
+        RefreshTasks(); _stateChanged();
+    }
+    public IEnumerable<TodoTaskViewModel> ConversionTargets(TodoTaskViewModel source) =>
+        source.ParentId is null && !source.HasSubtasks
+        ? PendingTasks.Concat(CompletedTasks).Where(task => task.Id != source.Id && task.GroupId == source.GroupId)
+        : [];
+    public void ConvertToSubtask(Guid sourceId, Guid destinationId)
+    {
+        SubtaskOperations.Convert(_state, sourceId, destinationId, DateTimeOffset.UtcNow);
+        RefreshTasks(); _stateChanged();
     }
 
     public string Title
@@ -244,6 +278,7 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
     {
         _undoCancellation?.Cancel();
         _undoCancellation?.Dispose();
+        _undoCancellation = null;
     }
 
     private bool CanAddTask() => !string.IsNullOrWhiteSpace(NewTaskText);
@@ -263,17 +298,26 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
 
     private void SetCompleted(Guid taskId, bool completed)
     {
-        if (completed)
-        {
-            TodoListOperations.CompleteTask(_state, taskId, DateTimeOffset.UtcNow);
-        }
-        else
-        {
-            TodoListOperations.ReopenTask(_state, taskId, DateTimeOffset.UtcNow);
-        }
-
-        RefreshTasks();
-        _stateChanged();
+        var root = SubtaskOperations.Parent(_state, taskId) ?? SubtaskOperations.Find(_state, taskId);
+        var statuses = new[] { root }.Concat(root.Subtasks).Select(task =>
+            (task.Id, task.IsCompleted, task.CompletedAt, task.PendingOrder, task.UpdatedAt)).ToArray();
+        if (completed) TodoListOperations.CompleteTask(_state, taskId, DateTimeOffset.UtcNow);
+        else TodoListOperations.ReopenTask(_state, taskId, DateTimeOffset.UtcNow);
+        if (root.Subtasks.Count > 0)
+            OfferUndo("Estado de tarea y subtareas actualizado", () =>
+            {
+                foreach (var old in statuses)
+                {
+                    var current = _state.Tasks.SelectMany(parent => new[] { parent }.Concat(parent.Subtasks)).FirstOrDefault(task => task.Id == old.Id);
+                    if (current is null) continue;
+                    current.IsCompleted = old.IsCompleted; current.CompletedAt = old.CompletedAt;
+                    current.PendingOrder = old.PendingOrder; current.UpdatedAt = old.UpdatedAt;
+                }
+                TodoListOperations.NormalizePendingOrder(_state);
+                if (!root.IsCompleted && _state.Tasks.Contains(root))
+                    TodoListOperations.MovePendingTask(_state, root.Id, statuses[0].PendingOrder, DateTimeOffset.UtcNow);
+            });
+        RefreshTasks(); _stateChanged();
     }
 
     private bool SaveTaskEdit(Guid taskId, string text)
@@ -293,29 +337,67 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
 
     private void DeleteTask(TodoTaskViewModel taskViewModel)
     {
+        var parent = SubtaskOperations.Parent(_state, taskViewModel.Id);
+        var index = parent?.Subtasks.FindIndex(child => child.Id == taskViewModel.Id) ?? -1;
+        var parentOrder = parent?.PendingOrder ?? -1;
+        var removed = TodoListOperations.RemoveTask(_state, taskViewModel.Id, DateTimeOffset.UtcNow);
+        OfferUndo($"“{Shorten(removed.Text, 36)}” eliminada", () =>
+        {
+            if (parent is null) TodoListOperations.RestoreTask(_state, removed, DateTimeOffset.UtcNow);
+            else
+            {
+                if (!_state.Tasks.Contains(parent)) return;
+                removed.GroupId = parent.GroupId;
+                parent.Subtasks.Insert(Math.Clamp(index, 0, parent.Subtasks.Count), removed);
+                SubtaskOperations.SynchronizeParent(_state, parent, DateTimeOffset.UtcNow);
+                if (!parent.IsCompleted) parent.PendingOrder = parentOrder;
+                TodoListOperations.NormalizePendingOrder(_state);
+            }
+        });
+        RefreshTasks(); _stateChanged();
+    }
+
+    private void OfferUndo(string message, Action action)
+    {
+        _undoCancellation?.Cancel(); _undoCancellation?.Dispose();
+        _undoAction = action;
+        _lastDeletedTasks = [];
+        UndoMessage = message; IsUndoVisible = true;
+        _undoCancellation = new CancellationTokenSource();
+        _ = HideUndoAfterDelayAsync(_undoCancellation.Token);
+    }
+
+    private void ClearCompleted()
+    {
+        if (!HasCompletedTasks) return;
         _undoCancellation?.Cancel();
         _undoCancellation?.Dispose();
-        _lastDeletedTask = TodoListOperations.RemoveTask(_state, taskViewModel.Id, DateTimeOffset.UtcNow);
-        UndoMessage = $"“{Shorten(_lastDeletedTask.Text, 36)}” eliminada";
+        _undoAction = null;
+        _lastDeletedTasks = TodoListOperations.ClearCompleted(_state, DateTimeOffset.UtcNow);
+        if (_lastDeletedTasks.Count == 0) return;
+        UndoMessage = $"{_lastDeletedTasks.Count} completadas eliminadas";
         IsUndoVisible = true;
         RefreshTasks();
         _stateChanged();
-
         _undoCancellation = new CancellationTokenSource();
         _ = HideUndoAfterDelayAsync(_undoCancellation.Token);
     }
 
     private void UndoDelete()
     {
-        if (_lastDeletedTask is null)
+        if (_lastDeletedTasks.Count == 0 && _undoAction is null)
         {
             return;
         }
 
         _undoCancellation?.Cancel();
-        TodoListOperations.RestoreTask(_state, _lastDeletedTask, DateTimeOffset.UtcNow);
-        _lastDeletedTask = null;
+        _undoAction?.Invoke();
+        _undoAction = null;
+        foreach (var task in _lastDeletedTasks)
+            TodoListOperations.RestoreTask(_state, task, DateTimeOffset.UtcNow);
+        _lastDeletedTasks = [];
         IsUndoVisible = false;
+        _state.UpdatedAt = DateTimeOffset.UtcNow;
         RefreshTasks();
         _stateChanged();
     }
@@ -325,7 +407,8 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
         try
         {
             await Task.Delay(AppConstants.UndoDeleteDuration, cancellationToken);
-            _lastDeletedTask = null;
+            _lastDeletedTasks = [];
+            _undoAction = null;
             IsUndoVisible = false;
         }
         catch (OperationCanceledException)
@@ -340,7 +423,7 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
 
     private void RefreshTasks()
     {
-        var existing = PendingTasks.Concat(CompletedTasks).ToDictionary(task => task.Id);
+        var existing = PendingTasks.Concat(CompletedTasks).SelectMany(root => new[] { root }.Concat(root.Subtasks)).ToDictionary(task => task.Id);
         PendingTasks.Clear();
         CompletedTasks.Clear();
 
@@ -358,6 +441,16 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
             CompletedTasks.Add(viewModel);
         }
 
+        foreach (var root in PendingTasks.Concat(CompletedTasks))
+        {
+            var model = _state.Tasks.Single(task => task.Id == root.Id);
+            var children = model.Subtasks.Select(child =>
+            {
+                var vm = GetOrCreateTaskViewModel(existing, child, root.Id);
+                vm.SynchronizeFromModel(); return vm;
+            }).ToArray();
+            root.RefreshSubtasks(children);
+        }
         var selectedId = SelectedGroup?.Id;
         if (Groups.Count == 0) Groups.Add(new TodoGroupViewModel(null, "General", _state.IsGeneralGroupExpanded,
             expanded => { _state.IsGeneralGroupExpanded = expanded; TouchAndSave(); }));
@@ -368,24 +461,31 @@ public sealed class TodoWindowViewModel : ObservableObject, IDisposable
             if (!Groups.Any(item => item.Id == group.Id)) Groups.Add(new TodoGroupViewModel(group.Id, group.Name, group.IsExpanded,
                 expanded => { group.IsExpanded = expanded; TouchAndSave(); }));
         }
+        for (var index = 0; index < _state.Groups.Count; index++)
+        {
+            var current = Groups.Single(item => item.Id == _state.Groups[index].Id);
+            var position = Groups.IndexOf(current);
+            if (position != index + 1) Groups.Move(position, index + 1);
+        }
         foreach (var group in Groups) group.Refresh(PendingTasks.Where(task => task.GroupId == group.Id));
-        foreach (var task in PendingTasks.Concat(CompletedTasks)) task.GroupName = Groups.Single(group => group.Id == task.GroupId).Name;
+        foreach (var task in PendingTasks.Concat(CompletedTasks).SelectMany(root => new[] { root }.Concat(root.Subtasks))) task.GroupName = Groups.Single(group => group.Id == task.GroupId).Name;
         SelectedGroup = Groups.FirstOrDefault(group => group.Id == selectedId) ?? Groups[0];
 
         OnPropertyChanged(nameof(PendingCount));
         OnPropertyChanged(nameof(CompletedCount));
         OnPropertyChanged(nameof(HasAnyTasks));
         OnPropertyChanged(nameof(HasCompletedTasks));
+        ClearCompletedCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(CompletedHeader));
     }
 
     private TodoTaskViewModel GetOrCreateTaskViewModel(
         IReadOnlyDictionary<Guid, TodoTaskViewModel> existing,
-        TodoTaskItem item) =>
-        existing.TryGetValue(item.Id, out var viewModel)
+        TodoTaskItem item, Guid? parentId = null) =>
+        existing.TryGetValue(item.Id, out var viewModel) && viewModel.ParentId == parentId
             ? viewModel
-            : new TodoTaskViewModel(item, SetCompleted, DeleteTask, SaveTaskEdit);
+            : new TodoTaskViewModel(item, SetCompleted, DeleteTask, SaveTaskEdit, parentId, TouchAndSave, AddSubtask);
 
     private void TouchAndSave()
     {

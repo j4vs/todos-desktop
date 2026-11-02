@@ -1,0 +1,79 @@
+<Window x:Class="Todos.Presentation.Views.TaskNotesWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:controls="clr-namespace:Todos.Presentation.Controls" xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+ Title="{Binding Text, StringFormat='Nota — {0}'}" Width="650" Height="600" MinWidth="400" MinHeight="320"
+ WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent"
+ Foreground="{DynamicResource TodosTextBrush}" Topmost="True" ShowInTaskbar="False" WindowStartupLocation="Manual"
+ FontFamily="{StaticResource TodosFontFamily}" FontSize="{DynamicResource Font14}" PreviewKeyDown="OnKeyDown">
+ <Window.Resources>
+  <Style x:Key="NoteButton" TargetType="Button">
+   <Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" /><Setter Property="Background" Value="{DynamicResource TodosHoverSurfaceBrush}" />
+   <Setter Property="Padding" Value="{DynamicResource Space10_8}" /><Setter Property="Cursor" Value="Hand" /><Setter Property="FontSize" Value="{DynamicResource Font13}" />
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="9" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Border><ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource TodosPressedSurfaceBrush}" /></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource TodosFocusBrush}" /></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5" /></Trigger>
+    </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="TabItem">
+   <Setter Property="Padding" Value="{DynamicResource Space12_8}" /><Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" />
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">
+    <Border x:Name="Tab" Background="Transparent" CornerRadius="9" Padding="{TemplateBinding Padding}" Margin="0,0,5,8" BorderThickness="1" BorderBrush="Transparent">
+     <ContentPresenter x:Name="TabHeader" ContentSource="Header" />
+    </Border><ControlTemplate.Triggers>
+     <Trigger Property="IsSelected" Value="True"><Setter TargetName="Tab" Property="Background" Value="{DynamicResource TodosHoverSurfaceBrush}" /><Setter TargetName="TabHeader" Property="TextElement.FontWeight" Value="SemiBold" /></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource TodosFocusBrush}" /></Trigger>
+    </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="ScrollBar" BasedOn="{StaticResource TodosSlimScrollBar}" />
+  <Style TargetType="ScrollViewer" BasedOn="{StaticResource TodosSlimScrollViewer}" />
+ </Window.Resources>
+ <Border x:Name="NoteSurface" CornerRadius="21" Background="{DynamicResource TodosPopupBrush}" BorderThickness="1" BorderBrush="{DynamicResource WindowInputBorderBrush}" Padding="{DynamicResource Space16}">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+   <Grid Margin="{DynamicResource Space0_0_0_12}" MouseLeftButtonDown="OnHeaderMouseDown">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+    <StackPanel><TextBlock Text="Nota" FontWeight="SemiBold" FontSize="{DynamicResource Font21}" />
+     <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text}" FontSize="{DynamicResource Font13}" Foreground="{DynamicResource TodosSecondaryTextBrush}" /></StackPanel>
+    <Button Grid.Column="1" Style="{StaticResource NoteButton}" Click="OnClose" ToolTip="Cerrar nota" VerticalAlignment="Top">
+     <controls:SvgIcon Source="Assets/Icons/xmark.svg" Width="14" Height="14" Foreground="{DynamicResource TodosTextBrush}" />
+    </Button>
+   </Grid>
+   <TabControl x:Name="NotesTabs" Grid.Row="1" Background="Transparent" BorderThickness="0" SelectionChanged="OnTabChanged">
+    <TabItem Header="Visualizar">
+     <Border Background="#80FFFFFF" CornerRadius="12"><FlowDocumentScrollViewer x:Name="NotePreview" IsToolBarVisible="False" VerticalScrollBarVisibility="Auto" /></Border>
+    </TabItem>
+    <TabItem Header="Editar">
+     <Border Background="#80FFFFFF" CornerRadius="12" Padding="{DynamicResource Space8}">
+      <TextBox x:Name="NoteEditor" Text="{Binding NotesMarkdown, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" AcceptsTab="True"
+       TextWrapping="Wrap" FontFamily="Consolas" FontSize="{DynamicResource Font14}" Background="Transparent" BorderThickness="0"
+       Foreground="{DynamicResource TodosTextBrush}" CaretBrush="{DynamicResource TodosTextBrush}" SelectionBrush="{DynamicResource TodosHoverSurfaceBrush}"
+       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="{DynamicResource Space8}" />
+     </Border>
+    </TabItem>
+   </TabControl>
+   <Grid Grid.Row="2" Margin="{DynamicResource Space0_8_0_0}">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+    <TextBlock x:Name="NoteStatus" Text="{Binding NotesSaveStatus}" FontSize="{DynamicResource Font11}" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TodosSecondaryTextBrush}" Margin="{DynamicResource Space0_0_8_0}" />
+    <StackPanel Grid.Column="1" Orientation="Horizontal">
+     <Button x:Name="ImportButton" Style="{StaticResource NoteButton}" Content="Importar .md" Click="OnImport" />
+     <Button x:Name="ExportButton" Style="{StaticResource NoteButton}" Content="Exportar .md" Click="OnExport" Margin="{DynamicResource Space5_0_0_0}" />
+    </StackPanel>
+   </Grid>
+   <Border x:Name="FileMessagePanel" Grid.RowSpan="3" Visibility="Collapsed" Background="{DynamicResource TodosPopupBrush}" BorderBrush="{DynamicResource WindowInputBorderBrush}" BorderThickness="1" CornerRadius="13" Padding="{DynamicResource Space16}" VerticalAlignment="Center" Margin="{DynamicResource Space16}">
+    <StackPanel><TextBlock x:Name="FileMessage" TextWrapping="Wrap" />
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="{DynamicResource Space0_8_0_0}">
+      <Button x:Name="CancelImportButton" Style="{StaticResource NoteButton}" Content="Cancelar" Click="OnCancelImport" />
+      <Button x:Name="ConfirmImportButton" Style="{StaticResource NoteButton}" Content="Reemplazar nota" Click="OnConfirmImport" Margin="{DynamicResource Space5_0_0_0}" />
+     </StackPanel>
+    </StackPanel>
+   </Border>
+   <primitives:Thumb Width="16" Height="16" Grid.RowSpan="3" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-10,-10" Cursor="SizeNWSE" DragDelta="OnResize">
+    <primitives:Thumb.Template><ControlTemplate TargetType="primitives:Thumb"><TextBlock Text="◢" Foreground="{DynamicResource TodosSecondaryTextBrush}" Opacity="0.6" /></ControlTemplate></primitives:Thumb.Template>
+   </primitives:Thumb>
+  </Grid>
+ </Border>
+</Window>

@@ -15,10 +15,20 @@ public static class AppStateNormalizer
         state.SchemaVersion = AppConstants.CurrentSchemaVersion;
         state.LauncherState ??= new LauncherState();
         state.Settings ??= new AppSettings();
+        state.Settings.FontSizeStep = Math.Clamp(state.Settings.FontSizeStep, -2, 4);
+        if (state.Settings.LauncherSize is < 0 or > 2) state.Settings.LauncherSize = 1;
+        if (state.Settings.SpacingSize is < 0 or > 2) state.Settings.SpacingSize = 1;
         state.TodoWindows ??= [];
+        state.TrashedWindows ??= [];
+        foreach (var trashed in state.TrashedWindows)
+        {
+            trashed.IsVisible = false;
+            trashed.TrashedAt ??= trashed.UpdatedAt == default ? DateTimeOffset.UtcNow : trashed.UpdatedAt;
+        }
+        foreach (var active in state.TodoWindows) active.TrashedAt = null;
 
         var knownWindowIds = new HashSet<Guid>();
-        foreach (var window in state.TodoWindows)
+        foreach (var window in state.TodoWindows.Concat(state.TrashedWindows))
         {
             if (window.Id == Guid.Empty || !knownWindowIds.Add(window.Id))
             {
@@ -47,6 +57,7 @@ public static class AppStateNormalizer
             for (var index = window.Tasks.Count - 1; index >= 0; index--)
             {
                 var task = window.Tasks[index];
+                task.NotesMarkdown ??= string.Empty;
                 if (task.GroupId is { } groupId && !knownGroupIds.Contains(groupId))
                 {
                     task.GroupId = null;
@@ -57,8 +68,8 @@ public static class AppStateNormalizer
                 }
                 catch (ArgumentException)
                 {
-                    window.Tasks.RemoveAt(index);
-                    continue;
+                    if (task.Subtasks?.Count > 0 || !string.IsNullOrWhiteSpace(task.NotesMarkdown)) task.Text = "Tarea";
+                    else { window.Tasks.RemoveAt(index); continue; }
                 }
 
                 if (task.Id == Guid.Empty || !knownTaskIds.Add(task.Id))
@@ -78,7 +89,38 @@ public static class AppStateNormalizer
                 }
             }
 
+            foreach (var parent in window.Tasks)
+            {
+                parent.Subtasks ??= [];
+                // Repair deeper imported trees by keeping every valid step at one level.
+                var queue = new Queue<TodoTaskItem>(parent.Subtasks);
+                var repaired = new List<TodoTaskItem>();
+                while (queue.TryDequeue(out var child))
+                {
+                    child.NotesMarkdown ??= string.Empty;
+                    if (child.Subtasks is not null) foreach (var nested in child.Subtasks) queue.Enqueue(nested);
+                    child.Subtasks = [];
+                    try { child.Text = TodoText.NormalizeTask(child.Text); }
+                    catch (ArgumentException)
+                    {
+                        if (string.IsNullOrWhiteSpace(child.NotesMarkdown)) continue;
+                        child.Text = "Subtarea";
+                    }
+                    if (child.Id == Guid.Empty || !knownTaskIds.Add(child.Id)) { child.Id = Guid.NewGuid(); knownTaskIds.Add(child.Id); }
+                    child.GroupId = parent.GroupId;
+                    if (child.IsCompleted) child.CompletedAt ??= child.UpdatedAt == default ? child.CreatedAt : child.UpdatedAt;
+                    else child.CompletedAt = null;
+                    repaired.Add(child);
+                }
+                parent.Subtasks = repaired;
+                SubtaskOperations.SynchronizeParent(window, parent, parent.UpdatedAt == default ? DateTimeOffset.UtcNow : parent.UpdatedAt);
+            }
             TodoListOperations.NormalizePendingOrder(window);
+        }
+
+        if (!state.TodoWindows.Any(window => window.Id == state.LauncherState.LastMinimizedWindowId))
+        {
+            state.LauncherState.LastMinimizedWindowId = null;
         }
 
         return state;

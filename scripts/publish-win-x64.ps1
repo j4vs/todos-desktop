@@ -1,8 +1,10 @@
+﻿param([string]$OutputDirectory = "publish\win-x64")
+
 $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $projectPath = Join-Path $repositoryRoot 'src\Todos.App\Todos.App.csproj'
-$publishDirectory = Join-Path $repositoryRoot 'publish\win-x64'
+$publishDirectory = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $OutputDirectory))
 $executablePath = Join-Path $publishDirectory 'Todos.exe'
 $projectXml = [xml](Get-Content -LiteralPath $projectPath -Raw)
 $version = [string]($projectXml.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1)
@@ -18,7 +20,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'No fue posible restaurar los runtime packs.' }
 
     dotnet publish $projectPath --configuration Release --runtime win-x64 `
-        --self-contained true --no-restore --property:PublishProfile=win-x64
+        --self-contained true --no-restore --property:PublishProfile=win-x64 --output $publishDirectory
     if ($LASTEXITCODE -ne 0) { throw 'No fue posible publicar Todo''s.' }
 
     if (-not (Test-Path -LiteralPath $executablePath)) {

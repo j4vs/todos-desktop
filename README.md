@@ -25,19 +25,30 @@ localmente y no necesita servicios de IA para utilizarse.
 4. Windows puede colocar su icono dentro del chevrón del área de notificación.
 
 En la primera ejecución, Todo's queda configurado para iniciar con Windows. La
-opción puede desactivarse desde el menú del botón flotante y no requiere
+opción puede desactivarse desde clic derecho → Configuración en el botón flotante y no requiere
 permisos de administrador.
 
 ## Funciones principales
 
-- Botón flotante movible, siempre visible y por encima de las ventanas TODO.
+- Botón flotante circular vectorial, movible y siempre encima, con acceso rápido a la última lista minimizada.
+- Minimizar el botón flotante y mostrarlo u ocultarlo desde el área de notificación sin cerrar la aplicación.
+- Apariencia configurable: letra con −/+, botón principal Chico/Mediano/Grande y espaciado general Chico/Mediano/Grande, con aplicación inmediata y persistencia.
 - Múltiples listas independientes, redimensionables y siempre encima.
 - Siete temas pastel.
-- Agrupaciones de tareas por lista, con General predeterminado y traslado entre grupos.
+- Agrupaciones de tareas por lista, con General predeterminado, renombrado, reordenamiento y traslado entre grupos.
+- Vaciar tareas completadas por lista con deshacer de lote.
+- Subtareas de un nivel con avance junto al checkbox, plegado, captura en línea, edición y reordenamiento.
+- Una nota Markdown por tarea o subtarea, con editor y visualizador en pestañas, guardado automático e importación/exportación `.md`.
+- Menús de tareas junto al cursor, fila resaltada y acciones explícitas para editar, completar/reabrir, eliminar y mover entre grupos.
 - Tareas editables, reordenables, completables, reabribles y eliminables con
   deshacer.
 - Ocultar una lista con `Alt+F4` sin borrarla.
-- Recuperar o eliminar listas ocultas desde el submenú del botón central.
+- Recuperar listas ocultas con hover de un segundo o clic sin asociación.
+- Etiquetas laterales, título principal solo en hover, checks SVG y scroll delgado.
+- Clic derecho: botones redondos para salida, configuración, papelera y nueva lista.
+- Papelera persistente para restaurar listas completas o eliminarlas definitivamente.
+- Clic derecho en una lista oculta para moverla directamente a papelera.
+- Minimización automática opcional al hacer clic fuera de una lista.
 - Icono de Todo's en el área de notificación con acceso y salida segura.
 - Guardado local automático, respaldo y recuperación ante archivos dañados.
 - Instancia única: abrir el programa de nuevo recupera la instancia existente.
@@ -82,8 +93,9 @@ Para generar el paquete portable:
 El script genera el ejecutable y el ZIP en `publish/`; estos archivos no se
 incluyen en el código fuente del repositorio.
 
-Si se reemplaza `src\Todos.App\Assets\icon.png`, primero debe regenerarse el
-icono multirresolución con `.\scripts\build-icon.ps1`.
+El ícono circular se define en `src\Todos.App\Assets\icon.svg`.
+`.\scripts\build-icon.ps1` regenera el PNG y los nueve tamaños del ICO directamente
+desde ese vector; el ejecutable y el área de notificación comparten ese ícono.
 
 La guía detallada está en
 [compilación y publicación](.codex/build-and-publish.md).
@@ -95,6 +107,6 @@ La guía detallada está en
 - `.codex`: contexto, diseño, plan, progreso y documentación del producto.
 - `publish`: artefactos finales ignorados por control de versiones.
 
-Versión actual: **1.1.4**. La actualización migra los datos anteriores al esquema 2;
-las tareas existentes se conservan en General. El formato nuevo requiere 1.1.0
-o posterior; para regresar a 1.0.x se necesita un respaldo previo a la actualización.
+Versión actual: **1.8.2**. La actualización migra los datos anteriores al esquema 5,
+conservando listas, tareas y preferencias. Versiones 1.7.x y anteriores no pueden
+leer este formato; para regresar a ellas se necesita un respaldo previo.

@@ -16,6 +16,15 @@ public static class TodoThemePalette
             [TodoColorTheme.Mist] = new("#EAE8E5", "#F7F6F4", "#77716B", "#302E2C"),
         };
 
+    // Use the theme accent with a small brightness reduction for clear white icons.
+    public static string GetLauncherBackground(TodoColorTheme theme)
+    {
+        var background = Get(theme).Accent;
+        var channels = Enumerable.Range(0, 3)
+            .Select(index => (int)Math.Round(Convert.ToInt32(background.Substring(1 + index * 2, 2), 16) * 0.9));
+        return "#" + string.Concat(channels.Select(channel => channel.ToString("X2")));
+    }
+
     public static TodoThemeColors Get(TodoColorTheme theme) =>
         Colors.TryGetValue(theme, out var colors) ? colors : Colors[TodoColorTheme.Lavender];
 }

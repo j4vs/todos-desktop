@@ -30,42 +30,22 @@ public static class TodoListOperations
         Touch(window, now);
     }
 
-    public static void CompleteTask(TodoWindowState window, Guid taskId, DateTimeOffset now)
-    {
-        var task = FindTask(window, taskId);
-        if (task.IsCompleted)
-        {
-            return;
-        }
+    public static void CompleteTask(TodoWindowState window, Guid taskId, DateTimeOffset now) =>
+        SubtaskOperations.SetCompleted(window, taskId, true, now);
 
-        task.IsCompleted = true;
-        task.CompletedAt = now;
-        task.PendingOrder = -1;
-        task.UpdatedAt = now;
-        NormalizePendingOrder(window);
-        Touch(window, now);
-    }
-
-    public static void ReopenTask(TodoWindowState window, Guid taskId, DateTimeOffset now)
-    {
-        var task = FindTask(window, taskId);
-        if (!task.IsCompleted)
-        {
-            return;
-        }
-
-        task.IsCompleted = false;
-        task.CompletedAt = null;
-        task.PendingOrder = window.Tasks.Count(candidate => !candidate.IsCompleted && candidate.GroupId == task.GroupId);
-        task.UpdatedAt = now;
-        NormalizePendingOrder(window);
-        Touch(window, now);
-    }
+    public static void ReopenTask(TodoWindowState window, Guid taskId, DateTimeOffset now) =>
+        SubtaskOperations.SetCompleted(window, taskId, false, now);
 
     public static TodoTaskItem RemoveTask(TodoWindowState window, Guid taskId, DateTimeOffset now)
     {
         var task = FindTask(window, taskId);
-        window.Tasks.Remove(task);
+        var parent = SubtaskOperations.Parent(window, taskId);
+        if (parent is null) window.Tasks.Remove(task);
+        else
+        {
+            parent.Subtasks.Remove(task);
+            SubtaskOperations.SynchronizeParent(window, parent, now);
+        }
         NormalizePendingOrder(window);
         Touch(window, now);
         return task;
@@ -91,6 +71,7 @@ public static class TodoListOperations
             NormalizePendingOrder(window);
         }
 
+        foreach (var child in task.Subtasks) child.GroupId = task.GroupId;
         task.UpdatedAt = now;
         Touch(window, now);
     }
@@ -157,6 +138,22 @@ public static class TodoListOperations
         return group;
     }
 
+    public static void MoveGroup(TodoWindowState window, Guid groupId, int destinationIndex, DateTimeOffset now)
+    {
+        var group = window.Groups.Single(item => item.Id == groupId);
+        window.Groups.Remove(group);
+        window.Groups.Insert(Math.Clamp(destinationIndex, 0, window.Groups.Count), group);
+        Touch(window, now);
+    }
+
+    public static IReadOnlyList<TodoTaskItem> ClearCompleted(TodoWindowState window, DateTimeOffset now)
+    {
+        var removed = GetCompleted(window);
+        window.Tasks.RemoveAll(task => task.IsCompleted);
+        if (removed.Count > 0) Touch(window, now);
+        return removed;
+    }
+
     public static void RenameGroup(TodoWindowState window, Guid groupId, string name, DateTimeOffset now)
     {
         var group = window.Groups.Single(group => group.Id == groupId);
@@ -175,7 +172,9 @@ public static class TodoListOperations
     {
         ValidateGroup(window, groupId);
         var task = FindTask(window, taskId);
+        if (SubtaskOperations.Parent(window, taskId) is not null) throw new ArgumentException("Mueve la tarea principal para trasladar sus subtareas.");
         task.GroupId = groupId;
+        foreach (var child in task.Subtasks) child.GroupId = groupId;
         if (!task.IsCompleted)
         {
             MovePendingTask(window, taskId, destinationIndex, now);
@@ -206,12 +205,7 @@ public static class TodoListOperations
         }
     }
 
-    private static TodoTaskItem FindTask(TodoWindowState window, Guid taskId)
-    {
-        ArgumentNullException.ThrowIfNull(window);
-        return window.Tasks.SingleOrDefault(task => task.Id == taskId)
-            ?? throw new KeyNotFoundException("No se encontró la tarea.");
-    }
+    private static TodoTaskItem FindTask(TodoWindowState window, Guid taskId) => SubtaskOperations.Find(window, taskId);
 
     private static void Touch(TodoWindowState window, DateTimeOffset now) => window.UpdatedAt = now;
 }

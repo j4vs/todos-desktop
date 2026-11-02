@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -11,9 +11,9 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.1.4</Version>
-    <FileVersion>1.1.4.0</FileVersion>
-    <InformationalVersion>1.1.4</InformationalVersion>
+    <Version>1.8.2</Version>
+    <FileVersion>1.8.2.0</FileVersion>
+    <InformationalVersion>1.8.2</InformationalVersion>
     <AssemblyTitle>Todo's</AssemblyTitle>
     <Product>Todo's</Product>
     <Copyright>Copyright © 2026 Todo's</Copyright>
@@ -22,6 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Markdig" Version="1.3.2" />
     <Resource Include="Assets\icon.png" />
     <Resource Include="Assets\icon.svg" />
     <Resource Include="Assets\Icons\*.svg" />

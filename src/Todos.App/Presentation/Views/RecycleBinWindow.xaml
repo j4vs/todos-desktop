@@ -1,0 +1,81 @@
+<Window x:Class="Todos.Presentation.Views.RecycleBinWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:controls="clr-namespace:Todos.Presentation.Controls" xmlns:converters="clr-namespace:Todos.Presentation.Converters"
+ Title="Papelera — Todo's" Width="460" Height="520" WindowStyle="None" ResizeMode="NoResize"
+ AllowsTransparency="True" Background="Transparent" Topmost="True" ShowInTaskbar="False"
+ FontSize="{DynamicResource Font12}" FontFamily="{StaticResource TodosFontFamily}" WindowStartupLocation="Manual" PreviewKeyDown="OnPreviewKeyDown">
+ <Window.Resources>
+  <BooleanToVisibilityConverter x:Key="BoolVisibility" />
+  <converters:TodoThemeBrushConverter x:Key="ThemeBrush" />
+  <Style x:Key="BinButton" TargetType="Button">
+   <Setter Property="Background" Value="{StaticResource TodosBrandBrush}" /><Setter Property="Foreground" Value="White" />
+   <Setter Property="Padding" Value="{DynamicResource Space12_8}" /><Setter Property="Cursor" Value="Hand" /><Setter Property="FontSize" Value="{DynamicResource Font13}" />
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Border><ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Opacity" Value="0.84" /></Trigger>
+     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Opacity" Value="0.68" /></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{StaticResource TodosFocusBrush}" /><Setter TargetName="Surface" Property="BorderThickness" Value="2" /></Trigger>
+    </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </Window.Resources>
+ <Border x:Name="BinSurface" Background="#EEE9FA" CornerRadius="21" BorderBrush="#16000000" BorderThickness="1" Padding="{DynamicResource Space16}">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+   <Grid Margin="{DynamicResource Space4_2_0_16}" MouseLeftButtonDown="OnHeaderMouseDown">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+    <StackPanel><TextBlock Text="Papelera" FontSize="{DynamicResource Font21}" FontWeight="SemiBold" Foreground="{StaticResource TodosTextBrush}" />
+     <TextBlock Text="{Binding Summary}" Margin="{DynamicResource Space0_3_0_0}" FontSize="{DynamicResource Font13}" Foreground="{StaticResource TodosSecondaryTextBrush}" /></StackPanel>
+    <Button Grid.Column="1" Style="{StaticResource BinButton}" Padding="{DynamicResource Space9}" VerticalAlignment="Top" Click="OnClose" ToolTip="Cerrar papelera">
+     <controls:SvgIcon Source="Assets/Icons/xmark.svg" Width="15" Height="15" Foreground="White" />
+    </Button>
+   </Grid>
+   <Border Grid.Row="1" Background="#F6F1FF" CornerRadius="16" Padding="{DynamicResource Space10}">
+    <Grid>
+     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
+      <controls:SvgIcon Source="Assets/Icons/trash.svg" Width="32" Height="36" Foreground="{StaticResource TodosBrandBrush}" HorizontalAlignment="Center" />
+      <TextBlock Text="La papelera está vacía" Margin="{DynamicResource Space0_14_0_0}" FontSize="{DynamicResource Font16}" Foreground="{StaticResource TodosTextBrush}" />
+      <TextBlock Text="Aquí aparecerán las listas que borres." Margin="{DynamicResource Space0_6_0_0}" FontSize="{DynamicResource Font12}" Foreground="{StaticResource TodosSecondaryTextBrush}" />
+     </StackPanel>
+     <ScrollViewer x:Name="BinScroll" Style="{StaticResource TodosSlimScrollViewer}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl ItemsSource="{Binding Lists}"><ItemsControl.ItemTemplate><DataTemplate>
+       <Border Background="White" CornerRadius="12" Margin="{DynamicResource Space0_0_0_6}" Padding="{DynamicResource Space9}">
+        <Grid>
+         
+         <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+         <Grid Width="30" Height="30" HorizontalAlignment="Left" VerticalAlignment="Center">
+          <Ellipse Fill="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Launcher}" />
+          <controls:SvgIcon Source="Assets/Icons/check.svg" Width="16" Height="13" Foreground="White" />
+         </Grid>
+         <StackPanel Grid.Column="1"><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" FontSize="{DynamicResource Font14}" FontWeight="Medium" Foreground="{StaticResource TodosTextBrush}" />
+          <TextBlock Text="{Binding Details}" FontSize="{DynamicResource Font11}" Margin="{DynamicResource Space0_2_0_0}" Foreground="{StaticResource TodosSecondaryTextBrush}" /></StackPanel>
+         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="{DynamicResource Space8_0_0_0}">
+          <Button Style="{StaticResource BinButton}" Command="{Binding RestoreCommand}" Padding="{DynamicResource Space8}" ToolTip="Restaurar y abrir lista">
+           <controls:SvgIcon Source="Assets/Icons/restore.svg" Width="16" Height="16" Foreground="White" />
+          </Button>
+          <Button Style="{StaticResource BinButton}" Command="{Binding DeleteCommand}" Margin="{DynamicResource Space5_0_0_0}" Padding="{DynamicResource Space8}" Background="{StaticResource TodosDangerBrush}" ToolTip="Eliminar definitivamente">
+           <controls:SvgIcon Source="Assets/Icons/trash.svg" Width="15" Height="17" Foreground="White" />
+          </Button>
+         </StackPanel>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+     </ScrollViewer>
+    </Grid>
+   </Border>
+   <Border x:Name="DeleteConfirmation" Grid.Row="2" Background="White" CornerRadius="14" Padding="{DynamicResource Space14}" Margin="{DynamicResource Space0_10_0_0}"
+           Visibility="{Binding IsConfirmingDelete, Converter={StaticResource BoolVisibility}}">
+    <StackPanel>
+     <TextBlock Text="¿Eliminar definitivamente?" FontSize="{DynamicResource Font16}" FontWeight="Medium" Foreground="{StaticResource TodosTextBrush}" />
+     <TextBlock Text="{Binding PendingDeletion.Title}" FontSize="{DynamicResource Font14}" FontWeight="Medium" TextTrimming="CharacterEllipsis" Margin="{DynamicResource Space0_6_0_0}" Foreground="{StaticResource TodosTextBrush}" />
+     <TextBlock Text="La lista y sus tareas ya no podrán restaurarse." TextWrapping="Wrap" FontSize="{DynamicResource Font12}" Margin="{DynamicResource Space0_4_0_12}" Foreground="{StaticResource TodosSecondaryTextBrush}" />
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Content="Cancelar" Style="{StaticResource BinButton}" Background="{StaticResource TodosSecondaryTextBrush}" Command="{Binding CancelDeleteCommand}" />
+      <Button Content="Eliminar" Style="{StaticResource BinButton}" Background="{StaticResource TodosDangerBrush}" Command="{Binding ConfirmDeleteCommand}" Margin="{DynamicResource Space8_0_0_0}" />
+     </StackPanel>
+    </StackPanel>
+   </Border>
+  </Grid>
+ </Border>
+</Window>

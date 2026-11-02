@@ -12,6 +12,7 @@ public sealed class DebouncedAppStateSaver : IAsyncDisposable
     private AppState? _pendingSnapshot;
     private Task _backgroundSave = Task.CompletedTask;
     private bool _disposed;
+    public event Action<AppState, Exception?>? SaveCompleted;
 
     public DebouncedAppStateSaver(IAppStateRepository repository)
     {
@@ -99,6 +100,12 @@ public sealed class DebouncedAppStateSaver : IAsyncDisposable
         try
         {
             await _repository.SaveAsync(snapshot, cancellationToken);
+            SaveCompleted?.Invoke(snapshot, null);
+        }
+        catch (Exception exception)
+        {
+            SaveCompleted?.Invoke(snapshot, exception);
+            throw;
         }
         finally
         {

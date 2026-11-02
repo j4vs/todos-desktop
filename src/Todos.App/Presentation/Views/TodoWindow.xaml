@@ -21,7 +21,7 @@
         Foreground="{DynamicResource TodosTextBrush}"
         ShowInTaskbar="False"
         Topmost="True"
-        FontFamily="{StaticResource TodosFontFamily}"
+        FontSize="{DynamicResource Font12}" FontFamily="{StaticResource TodosFontFamily}"
         PreviewKeyDown="OnWindowPreviewKeyDown"
         automation:AutomationProperties.Name="{Binding Title}"
         WindowStartupLocation="Manual">
@@ -38,11 +38,11 @@
         <Style x:Key="HeaderActionStyle" TargetType="Button">
             <Setter Property="Width" Value="31" />
             <Setter Property="Height" Value="31" />
-            <Setter Property="Margin" Value="2,0,0,0" />
+            <Setter Property="Margin" Value="{DynamicResource Space2_0_0_0}" />
             <Setter Property="Background" Value="#66FFFFFF" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontFamily" Value="{StaticResource TodosFontFamily}" />
-            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontSize" Value="{DynamicResource Font15}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -71,7 +71,7 @@
         <Style x:Key="PaletteButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
-            <Setter Property="Margin" Value="3" />
+            <Setter Property="Margin" Value="{DynamicResource Space3}" />
             <Setter Property="BorderBrush" Value="#55FFFFFF" />
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="Cursor" Value="Hand" />
@@ -89,8 +89,8 @@
         <Style x:Key="TaskActionStyle" TargetType="Button">
             <Setter Property="Width" Value="27" />
             <Setter Property="Height" Value="27" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Padding" Value="{DynamicResource Space0}" />
+            <Setter Property="Margin" Value="{DynamicResource Space2_0}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource TodosSecondaryTextBrush}" />
@@ -117,8 +117,8 @@
             </Setter>
         </Style>
         <Style x:Key="GroupMenuItemStyle" TargetType="Button">
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="MinHeight" Value="{DynamicResource Row40}" />
+            <Setter Property="Padding" Value="{DynamicResource Space10_0}" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" />
             <Setter Property="Background" Value="Transparent" />
@@ -148,12 +148,12 @@
             <Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" />
             <Setter Property="CaretBrush" Value="{DynamicResource TodosTextBrush}" />
             <Setter Property="SelectionBrush" Value="{DynamicResource TodosBrandBrush}" />
-            <Setter Property="Padding" Value="11,5" />
+            <Setter Property="Padding" Value="{DynamicResource Space11_5}" />
             <Setter Property="Background" Value="{DynamicResource TodosPopupBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource WindowInputBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontFamily" Value="{StaticResource TodosFontFamily}" />
-            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontSize" Value="{DynamicResource Font13p5}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -166,7 +166,7 @@
                             <Grid>
                                 <ScrollViewer x:Name="PART_ContentHost" />
                                 <TextBlock x:Name="InputHint" Text="{TemplateBinding Tag}"
-                                           Margin="13,0,11,0" VerticalAlignment="Center"
+                                           Margin="{DynamicResource Space13_0_11_0}" VerticalAlignment="Center"
                                            IsHitTestVisible="False" Opacity="0.42" Visibility="Collapsed" />
                             </Grid>
                         </Border>
@@ -188,18 +188,18 @@
             </Setter>
         </Style>
         <Style x:Key="TaskEditInputStyle" TargetType="TextBox" BasedOn="{StaticResource RoundedTaskInputStyle}">
-            <Setter Property="MinHeight" Value="34" />
-            <Setter Property="Padding" Value="9,5" />
-            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="MinHeight" Value="{DynamicResource Row34}" />
+            <Setter Property="Padding" Value="{DynamicResource Space9_5}" />
+            <Setter Property="Margin" Value="{DynamicResource Space0_2}" />
             <Setter Property="Background" Value="{DynamicResource TodosPopupBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource TodosFocusBrush}" />
             <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="{DynamicResource Font14}" />
             <Setter Property="SelectionBrush" Value="{DynamicResource TodosBrandHoverBrush}" />
         </Style>
         <Style x:Key="AddTaskButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="36" />
-            <Setter Property="Height" Value="34" />
+            <Setter Property="Height" Value="{DynamicResource Row34}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="Background" Value="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}" />
             <Setter Property="BorderThickness" Value="0" />
@@ -251,7 +251,7 @@
             </Setter>
         </Style>
         <Style x:Key="UndoButtonStyle" TargetType="Button">
-            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="Padding" Value="{DynamicResource Space7_3}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" />
@@ -276,55 +276,137 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="TaskContextRowStyle" TargetType="Border">
+            <Setter Property="Background" Value="#16FFFFFF" />
+            <Style.Triggers><DataTrigger Binding="{Binding IsContextTarget}" Value="True">
+                <Setter Property="Background" Value="{DynamicResource TodosHoverSurfaceBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </DataTrigger></Style.Triggers>
+        </Style>
+        <Style x:Key="CompletedContextRowStyle" TargetType="Border" BasedOn="{StaticResource TaskContextRowStyle}">
+            <Setter Property="Opacity" Value="0.62" />
+        </Style>
+        <DataTemplate x:Key="SubtaskToggleTemplate">
+                <Button Style="{StaticResource SurfaceButtonStyle}" Command="{Binding ToggleSubtasksCommand}"
+                        HorizontalAlignment="Left" Padding="{DynamicResource Space2}"
+                        Visibility="{Binding HasSubtasks, Converter={StaticResource BoolToVisibility}}" ToolTip="Mostrar u ocultar subtareas" automation:AutomationProperties.Name="Mostrar u ocultar subtareas">
+                    <StackPanel Orientation="Horizontal">
+                        <controls:SvgIcon Source="Assets/Icons/chevron.svg" Width="10" Height="7" Foreground="{DynamicResource TodosSecondaryTextBrush}" Margin="{DynamicResource Space0_0_4_0}" RenderTransformOrigin="0.5,0.5">
+                            <controls:SvgIcon.Style><Style TargetType="controls:SvgIcon"><Setter Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter>
+                                <Style.Triggers><DataTrigger Binding="{Binding AreSubtasksExpanded}" Value="True"><Setter Property="RenderTransform"><Setter.Value><RotateTransform Angle="180" /></Setter.Value></Setter></DataTrigger></Style.Triggers>
+                            </Style></controls:SvgIcon.Style>
+                        </controls:SvgIcon>
+                        <TextBlock Text="{Binding SubtaskProgress}" FontSize="{DynamicResource Font11}" Foreground="{DynamicResource TodosSecondaryTextBrush}" />
+                    </StackPanel>
+                </Button>
+        </DataTemplate>
+        <DataTemplate x:Key="SubtasksPanelTemplate">
+            <StackPanel Margin="{DynamicResource Space20_0_0_0}">
+                <StackPanel Visibility="{Binding AreSubtasksExpanded, Converter={StaticResource BoolToVisibility}}">
+                    <Border x:Name="SubtaskDropSurface" Background="Transparent" AllowDrop="True" DragOver="OnSubtaskDragOver" Drop="OnSubtaskDrop" DragLeave="OnSubtaskDragLeave">
+                    <ItemsControl ItemsSource="{Binding Subtasks}"><ItemsControl.ItemTemplate><DataTemplate>
+                        <Border x:Name="SubtaskRow" Margin="{DynamicResource Space0_2}" CornerRadius="8"
+                                Style="{StaticResource TaskContextRowStyle}" Focusable="True" AllowDrop="True" MouseLeftButtonDown="OnTaskRowMouseDown"
+                                PreviewKeyDown="OnTaskRowKeyDown" ContextMenuOpening="OnTaskContextMenuOpening">
+                            <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
+                            <Grid>
+                                <Border x:Name="DropBeforeIndicator" Height="3" Background="{DynamicResource TodosBrandBrush}" VerticalAlignment="Top" Opacity="0" IsHitTestVisible="False" />
+                                <Border x:Name="DropAfterIndicator" Height="3" Background="{DynamicResource TodosBrandBrush}" VerticalAlignment="Bottom" Opacity="0" IsHitTestVisible="False" />
+                                <Grid x:Name="SubtaskRowContent" Margin="{DynamicResource Space5_4}"><Grid.RenderTransform><TranslateTransform /></Grid.RenderTransform><Grid.ColumnDefinitions><ColumnDefinition Width="26" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="22" /></Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{Binding IsCompleted}" VerticalAlignment="Center" ToolTip="Completar o reabrir subtarea" automation:AutomationProperties.Name="{Binding Text}" />
+                                <Grid Grid.Column="1" VerticalAlignment="Center">
+<Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+<Button Grid.Column="1" Style="{StaticResource TaskActionStyle}" Click="OnOpenNotes" ToolTip="Ver nota" automation:AutomationProperties.Name="Ver nota" Visibility="{Binding HasNotes, Converter={StaticResource BoolToVisibility}}">
+    <controls:SvgIcon Source="Assets/Icons/note.svg" Width="14" Height="16" Foreground="{DynamicResource TodosBrandBrush}" />
+</Button>
+                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="{DynamicResource Font14}" Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibility}}">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TodosTextBrush}" /><Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCompleted}" Value="True"><Setter Property="TextDecorations" Value="Strikethrough" /><Setter Property="Opacity" Value="0.6" /></DataTrigger>
+                                        </Style.Triggers></Style></TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBox Style="{StaticResource TaskEditInputStyle}" Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}" MaxLength="300"
+                                             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}" KeyDown="OnTaskEditKeyDown" LostKeyboardFocus="OnTaskEditLostFocus" automation:AutomationProperties.Name="Editar subtarea" />
+                                </Grid>
+                                <Button Grid.Column="2" Style="{StaticResource TaskActionStyle}" Command="{Binding DeleteCommand}" ToolTip="Eliminar subtarea" automation:AutomationProperties.Name="Eliminar subtarea">
+                                    <controls:SvgIcon Source="Assets/Icons/trash.svg" Width="11" Height="13" Foreground="{DynamicResource TodosDangerBrush}" />
+                                </Button>
+                                <Border Grid.Column="3" Background="Transparent" Cursor="SizeAll" PreviewMouseLeftButtonDown="OnSubtaskGripDown" PreviewMouseMove="OnSubtaskGripMove" ToolTip="Reordenar subtarea dentro de su tarea">
+                                    <controls:SvgIcon Source="Assets/Icons/move-up-down.svg" Width="16" Height="16" Foreground="{DynamicResource TodosSecondaryTextBrush}" Opacity="0.55" />
+                                </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    </Border>
+                    <Grid Margin="{DynamicResource Space0_2}" Visibility="{Binding IsSubtaskEditorVisible, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBox x:Name="SubtaskEditor" Style="{StaticResource RoundedTaskInputStyle}" MinHeight="{DynamicResource Row34}" Tag="Escribe un paso…"
+                                 Text="{Binding NewSubtaskText, UpdateSourceTrigger=PropertyChanged}" MaxLength="300" KeyDown="OnNewSubtaskKeyDown" automation:AutomationProperties.Name="Nueva subtarea" />
+                        <Button Grid.Column="1" Style="{StaticResource TaskActionStyle}" Command="{Binding AddSubtaskCommand}" ToolTip="Agregar subtarea" automation:AutomationProperties.Name="Agregar subtarea">
+                            <controls:SvgIcon Source="Assets/Icons/plus.svg" Width="14" Height="14" Foreground="{DynamicResource TodosBrandBrush}" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
 <DataTemplate x:Key="PendingTaskTemplate">
                                             <Border x:Name="TaskRowContainer"
-                                                    Margin="0,2"
+                                                    Margin="{DynamicResource Space0_2}"
                                                     CornerRadius="10"
                                                     Focusable="True"
                                                     automation:AutomationProperties.Name="{Binding Text}"
                                                     automation:AutomationProperties.HelpText="Alt más flecha arriba o abajo reordena; Suprimir elimina"
-                                                    Background="#16FFFFFF"
+                                                    Style="{StaticResource TaskContextRowStyle}"
                                                     AllowDrop="True"
                                                     MouseLeftButtonDown="OnTaskRowMouseDown"
                                                     PreviewKeyDown="OnTaskRowKeyDown"
                                                     ContextMenuOpening="OnTaskContextMenuOpening">
                                                 <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                                 <Grid>
-                                                    <Border x:Name="DropBeforeIndicator" Height="3" Margin="8,-1,8,0"
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                                    <Border x:Name="DropBeforeIndicator" Height="3" Margin="{DynamicResource Space8_n1_8_0}"
                                                             VerticalAlignment="Top" CornerRadius="2"
                                                             Background="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}" Opacity="0"
                                                             RenderTransformOrigin="0.5,0.5">
                                                         <Border.RenderTransform><ScaleTransform ScaleX="0.35" /></Border.RenderTransform>
                                                     </Border>
-                                                    <Border x:Name="DropAfterIndicator" Height="3" Margin="8,0,8,-1"
+                                                    <Border x:Name="DropAfterIndicator" Height="3" Margin="{DynamicResource Space8_0_8_n1}"
                                                             VerticalAlignment="Bottom" CornerRadius="2"
                                                             Background="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}" Opacity="0"
                                                             RenderTransformOrigin="0.5,0.5">
                                                         <Border.RenderTransform><ScaleTransform ScaleX="0.35" /></Border.RenderTransform>
                                                     </Border>
-                                                    <Grid x:Name="TaskRowContent" Margin="5,4">
+                                                    <Grid x:Name="TaskRowContent" Margin="{DynamicResource Space5_4}">
                                                         <Grid.RenderTransform><TranslateTransform Y="0" /></Grid.RenderTransform>
                                                         <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
                                                         <CheckBox Width="28"
-                                                                  Height="32"
-                                                                  Margin="0,0,4,0"
+                                                                  Height="{DynamicResource Row32}"
+                                                                  Margin="{DynamicResource Space0_0_4_0}"
                                                                   VerticalAlignment="Center"
                                                                   IsChecked="{Binding IsCompleted, Mode=TwoWay}"
                                                                   ToolTip="Marcar como completada"
                                                                   automation:AutomationProperties.Name="Completar tarea"
                                                                   automation:AutomationProperties.HelpText="{Binding Text}" />
-                                                        <Grid Grid.Column="1" VerticalAlignment="Center">
+                                                        <ContentControl x:Name="InlineSubtaskProgress" Grid.Column="1" Focusable="False" IsTabStop="False" VerticalAlignment="Center"
+                                                            Margin="{DynamicResource Space0_0_4_0}" Content="{Binding}" ContentTemplate="{StaticResource SubtaskToggleTemplate}"
+                                                            Visibility="{Binding HasSubtasks, Converter={StaticResource BoolToVisibility}}" />
+                                                        <Grid Grid.Column="2" VerticalAlignment="Center">
+<Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+<Button Grid.Column="1" Style="{StaticResource TaskActionStyle}" Click="OnOpenNotes" ToolTip="Ver nota" automation:AutomationProperties.Name="Ver nota" Visibility="{Binding HasNotes, Converter={StaticResource BoolToVisibility}}">
+    <controls:SvgIcon Source="Assets/Icons/note.svg" Width="14" Height="16" Foreground="{DynamicResource TodosBrandBrush}" />
+</Button>
                                                             <TextBlock Text="{Binding Text}"
                                                                        TextWrapping="Wrap"
                                                                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibility}}"
                                                                        Foreground="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                                                        FontFamily="{StaticResource TodosFontFamily}"
-                                                                       FontSize="14" />
+                                                                       FontSize="{DynamicResource Font14}" />
                                                             <TextBox Style="{StaticResource TaskEditInputStyle}"
                                                                      Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}"
                                                                      MaxLength="300"
@@ -333,7 +415,7 @@
                                                                      LostKeyboardFocus="OnTaskEditLostFocus"
                                                                      automation:AutomationProperties.Name="Editar texto de tarea" />
                                                         </Grid>
-<StackPanel Grid.Column="2" Orientation="Horizontal" Margin="2,0,0,0">                                                        <Button Style="{StaticResource TaskActionStyle}"
+<StackPanel Grid.Column="3" Orientation="Horizontal" Margin="{DynamicResource Space2_0_0_0}">                                                        <Button Style="{StaticResource TaskActionStyle}"
                                                                 
                                                                 Command="{Binding DeleteCommand}"
                                                                 Foreground="{DynamicResource TodosDangerBrush}"
@@ -341,7 +423,7 @@
                                                                 automation:AutomationProperties.Name="Eliminar tarea">
                                                             <controls:SvgIcon Width="11" Height="13" Source="Assets/Icons/trash.svg" Foreground="{DynamicResource TodosDangerBrush}" />
                                                         </Button></StackPanel>
-                                                        <Border Grid.Column="3" Width="28" Height="30" Margin="2,0,0,0"
+                                                        <Border Grid.Column="4" Width="28" Height="30" Margin="{DynamicResource Space2_0_0_0}"
                                                                 Background="Transparent" Cursor="SizeAll"
                                                                 PreviewMouseLeftButtonDown="OnGripMouseDown"
                                                                 PreviewMouseMove="OnGripMouseMove"
@@ -351,6 +433,7 @@
                                                                               Foreground="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}" />
                                                         </Border>
                                                     </Grid>
+                                                    <ContentControl Focusable="False" IsTabStop="False" Grid.Row="1" Grid.ColumnSpan="4" Content="{Binding}" ContentTemplate="{StaticResource SubtasksPanelTemplate}" />
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -360,7 +443,7 @@
     <Grid.RenderTransform>
         <ScaleTransform x:Name="EntranceScale" ScaleX="1" ScaleY="1" />
     </Grid.RenderTransform>
-    <Border Margin="8"
+    <Border Margin="{DynamicResource Space8}"
             Background="{Binding ColorTheme, Converter={StaticResource ThemeBrush}}"
             CornerRadius="21">
         <Border.Effect>
@@ -372,37 +455,37 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Grid x:Name="HeaderArea" Margin="0" Background="Transparent" Cursor="SizeAll"
+            <Grid x:Name="HeaderArea" Margin="{DynamicResource Space0}" Background="Transparent" Cursor="SizeAll"
                   PreviewMouseLeftButtonDown="OnHeaderMouseDown" PreviewMouseMove="OnHeaderMouseMove"
                   PreviewMouseLeftButtonUp="OnHeaderMouseUp" LostMouseCapture="OnHeaderLostCapture">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="15,14,0,8">
+                <StackPanel VerticalAlignment="Center" Margin="{DynamicResource Space15_14_0_8}">
                     <TextBox x:Name="TitleEditor" IsReadOnly="True" Cursor="SizeAll"
                              MaxLength="80"
-                             Padding="2,0"
+                             Padding="{DynamicResource Space2_0}"
                              Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
                              Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                              Background="Transparent"
                              BorderThickness="0"
                              FontFamily="{StaticResource TodosFontFamily}"
-                             FontSize="18"
+                             FontSize="{DynamicResource Font18}"
                              FontWeight="SemiBold"
                              KeyDown="OnTitleKeyDown"
                              LostKeyboardFocus="OnTitleLostFocus"
                              automation:AutomationProperties.Name="Título de la lista"
                              ToolTip="Arrastra para mover; doble clic o F2 para editar el título" />
-                    <TextBlock Margin="3,2,0,0"
+                    <TextBlock Margin="{DynamicResource Space3_2_0_0}"
                                Text="{Binding Summary}"
                                Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                Opacity="0.66"
                                FontFamily="{StaticResource TodosFontFamily}"
-                               FontSize="12.5"
+                               FontSize="{DynamicResource Font12p5}"
                                FontWeight="Medium" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,14,12,8">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="{DynamicResource Space0_14_12_8}">
 
                     <Button x:Name="PaletteButton"
                             Style="{StaticResource HeaderActionStyle}"
@@ -430,8 +513,8 @@
             </Grid>
 
             <Border Grid.Row="1"
-                    Margin="8,0,8,8"
-                    Padding="12"
+                    Margin="{DynamicResource Space8_0_8_8}"
+                    Padding="{DynamicResource Space12}"
                     Background="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Surface}"
                     CornerRadius="17">
                 <Grid>
@@ -440,12 +523,12 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel Margin="0,0,0,10">
-                        <TextBlock Margin="3,0,0,5"
+                    <StackPanel Margin="{DynamicResource Space0_0_0_10}">
+                        <TextBlock Margin="{DynamicResource Space3_0_0_5}"
                                    Text="Nueva tarea"
                                    Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                    FontFamily="{StaticResource TodosFontFamily}"
-                                   FontSize="12.5"
+                                   FontSize="{DynamicResource Font12p5}"
                                    FontWeight="SemiBold" />
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -457,7 +540,7 @@
                                 <TextBox x:Name="NewTaskEditor" Tag="Escribe el siguiente paso…"
                                          Style="{StaticResource RoundedTaskInputStyle}"
                                          MaxLength="300"
-                                         MinHeight="34"
+                                         MinHeight="{DynamicResource Row34}"
                                          Text="{Binding NewTaskText, UpdateSourceTrigger=PropertyChanged}"
                                          Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                          KeyDown="OnNewTaskKeyDown"
@@ -466,16 +549,16 @@
                                          ToolTip="Escribe una tarea y presiona Enter" />
 
                             </Grid>
-                            <Button x:Name="NewTaskGroupButton" Grid.Column="1" Margin="6,0,0,0"
-                                    Style="{StaticResource SurfaceButtonStyle}" MaxWidth="94" MinWidth="32" Height="34" Padding="7,0"
+                            <Button x:Name="NewTaskGroupButton" Grid.Column="1" Margin="{DynamicResource Space6_0_0_0}"
+                                    Style="{StaticResource SurfaceButtonStyle}" MaxWidth="94" MinWidth="32" Height="{DynamicResource Row34}" Padding="{DynamicResource Space7_0}"
                                     Click="OnSelectCaptureGroup" ToolTip="{Binding SelectedGroup.Name}"
                                     Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}"
                                     automation:AutomationProperties.Name="Elegir agrupación o crear grupo">
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding SelectedGroup.Name}" MaxWidth="62" TextTrimming="CharacterEllipsis"
-                                               VerticalAlignment="Center" FontSize="12" />
-                                    <controls:SvgIcon Grid.Column="1" Width="9" Height="6" Margin="6,0,0,0"
+                                               VerticalAlignment="Center" FontSize="{DynamicResource Font12}" />
+                                    <controls:SvgIcon Grid.Column="1" Width="9" Height="6" Margin="{DynamicResource Space6_0_0_0}"
                                                       Source="Assets/Icons/chevron.svg" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
                                                       RenderTransformOrigin="0.5,0.5">
                                         <controls:SvgIcon.RenderTransform><RotateTransform Angle="90" /></controls:SvgIcon.RenderTransform>
@@ -484,14 +567,14 @@
                             </Button>
                             <Button Grid.Column="2"
                                     Style="{StaticResource AddTaskButtonStyle}"
-                                    Margin="7,0,0,0"
+                                    Margin="{DynamicResource Space7_0_0_0}"
                                     Command="{Binding AddTaskCommand}"
                                     ToolTip="Agregar tarea"
                                     automation:AutomationProperties.Name="Agregar tarea">
                                 <controls:SvgIcon Width="15" Height="15" Source="Assets/Icons/plus.svg" Foreground="White" />
                             </Button>
                         </Grid>
-                        <TextBlock Text="{Binding GroupError}" TextWrapping="Wrap" Foreground="{DynamicResource TodosDangerBrush}" FontSize="11">
+                        <TextBlock Text="{Binding GroupError}" TextWrapping="Wrap" Foreground="{DynamicResource TodosDangerBrush}" FontSize="{DynamicResource Font11}">
                             <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers>
                                 <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed" /></Trigger>
                             </Style.Triggers></Style></TextBlock.Style>
@@ -499,32 +582,32 @@
                     </StackPanel>
 
                     <Grid Grid.Row="1">
-                        <ScrollViewer x:Name="TasksScrollViewer" VerticalScrollBarVisibility="Auto"
+                        <ScrollViewer Style="{StaticResource TodosSlimScrollViewer}" x:Name="TasksScrollViewer" VerticalScrollBarVisibility="Auto"
                                       AllowDrop="True" DragOver="OnTasksDragOver" DragLeave="OnTasksDragLeave" Drop="OnTasksDrop"
                                       HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
                                 <StackPanel Visibility="{Binding HasAnyTasks, Converter={StaticResource InverseBoolToVisibility}}"
-                                            Margin="0,28,0,0"
+                                            Margin="{DynamicResource Space0_28_0_0}"
                                             HorizontalAlignment="Center">
                                     <controls:SvgIcon HorizontalAlignment="Center" Width="27" Height="20"
                                                       Source="Assets/Icons/check.svg"
                                                       Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}" />
-                                    <TextBlock Margin="0,7,0,0"
+                                    <TextBlock Margin="{DynamicResource Space0_7_0_0}"
                                                Text="Agrega tu siguiente paso"
                                                Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                                Opacity="0.65"
                                                FontFamily="{StaticResource TodosFontFamily}"
-                                               FontSize="12" />
+                                               FontSize="{DynamicResource Font12}" />
                                 </StackPanel>
 
                                 <ItemsControl x:Name="PendingItems" ItemsSource="{Binding Groups}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border x:Name="TaskGroupContainer" Margin="0,3,0,8" Padding="3" CornerRadius="10"
+                                            <Border x:Name="TaskGroupContainer" Margin="{DynamicResource Space0_3_0_8}" Padding="{DynamicResource Space3}" CornerRadius="10"
                                                     Background="#18FFFFFF" AllowDrop="True"
                                                     >
                                                 <StackPanel>
-                                                    <Grid Margin="2,0,2,3">
+                                                    <Grid Margin="{DynamicResource Space2_0_2_3}">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
@@ -545,26 +628,40 @@
                                                                 </Style></controls:SvgIcon.Style>
                                                             </controls:SvgIcon>
                                                         </Button>
-                                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                        <TextBox x:Name="GroupTitleEditor" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                                                  IsReadOnly="{Binding IsGeneral}" MaxLength="80"
-                                                                 BorderThickness="0" Background="Transparent" Padding="4,5"
-                                                                 FontWeight="SemiBold" FontSize="13"
+                                                                 BorderThickness="0" Background="Transparent" Padding="{DynamicResource Space4_5}"
+                                                                 FontWeight="SemiBold" FontSize="{DynamicResource Font13}"
                                                                  Foreground="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}"
                                                                  LostKeyboardFocus="OnGroupNameLostFocus" KeyDown="OnGroupNameKeyDown"
                                                                  ToolTip="Nombre de la agrupación" automation:AutomationProperties.Name="Nombre de la agrupación" />
                                                         <TextBlock Grid.Column="2" Text="{Binding CountLabel}" Opacity="0.55"
-                                                                   VerticalAlignment="Center" Margin="6,0" />
-                                                        <Button Grid.Column="3" Style="{StaticResource TaskActionStyle}"
+                                                                   VerticalAlignment="Center" Margin="{DynamicResource Space6_0}" />
+                                                        <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                                            Visibility="{Binding IsGeneral, Converter={StaticResource InverseBoolToVisibility}}">
+                                                            <Button Width="21" Margin="{DynamicResource Space0}" Style="{StaticResource TaskActionStyle}" Click="OnRenameGroup" ToolTip="Renombrar grupo" automation:AutomationProperties.Name="Renombrar grupo">
+                                                                <controls:SvgIcon Source="Assets/Icons/pencil.svg" Width="12" Height="12" Foreground="{DynamicResource TodosSecondaryTextBrush}" />
+                                                            </Button>
+                                                            <Button Width="21" Margin="{DynamicResource Space0}" Style="{StaticResource TaskActionStyle}" Click="OnMoveGroupUp" ToolTip="Subir grupo" automation:AutomationProperties.Name="Subir grupo">
+                                                                <controls:SvgIcon Source="Assets/Icons/chevron.svg" Width="10" Height="7" Foreground="{DynamicResource TodosSecondaryTextBrush}" />
+                                                            </Button>
+                                                            <Button Width="21" Margin="{DynamicResource Space0}" Style="{StaticResource TaskActionStyle}" Click="OnMoveGroupDown" ToolTip="Bajar grupo" automation:AutomationProperties.Name="Bajar grupo">
+                                                                <controls:SvgIcon Source="Assets/Icons/chevron.svg" Width="10" Height="7" Foreground="{DynamicResource TodosSecondaryTextBrush}" RenderTransformOrigin="0.5,0.5">
+                                                                    <controls:SvgIcon.RenderTransform><RotateTransform Angle="180" /></controls:SvgIcon.RenderTransform>
+                                                                </controls:SvgIcon>
+                                                            </Button>
+                                                        <Button Style="{StaticResource TaskActionStyle}"
                                                                 Visibility="{Binding IsGeneral, Converter={StaticResource InverseBoolToVisibility}}"
                                                                 Click="OnRemoveGroup"
                                                                 ToolTip="Quitar grupo y mover sus tareas a General"
                                                                 automation:AutomationProperties.Name="Quitar grupo y mover tareas a General">
                                                             <controls:SvgIcon Width="13" Height="15" Source="Assets/Icons/trash.svg" Foreground="{DynamicResource TodosDangerBrush}" />
                                                         </Button>
+                                                        </StackPanel>
                                                     </Grid>
                                                     <StackPanel x:Name="GroupContent" Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}">
                                                     <ItemsControl ItemsSource="{Binding Tasks}" ItemTemplate="{StaticResource PendingTaskTemplate}" />
-                                                    <TextBlock Text="Arrastra tareas aquí" Margin="8,7" Opacity="0.45" FontSize="12"
+                                                    <TextBlock Text="Arrastra tareas aquí" Margin="{DynamicResource Space8_7}" Opacity="0.45" FontSize="{DynamicResource Font12}"
                                                                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
                                                     </StackPanel>
                                                 </StackPanel>
@@ -573,10 +670,12 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
+                                <Grid Visibility="{Binding HasCompletedTasks, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <Button Style="{StaticResource SurfaceButtonStyle}"
-                                        Margin="0,8,0,3"
-                                        MinHeight="34"
-                                        Padding="5"
+                                        Margin="{DynamicResource Space0_8_0_3}"
+                                        MinHeight="{DynamicResource Row34}"
+                                        Padding="{DynamicResource Space5}"
                                         Command="{Binding ToggleCompletedSectionCommand}"
                                         Visibility="{Binding HasCompletedTasks, Converter={StaticResource BoolToVisibility}}"
                                         Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
@@ -587,44 +686,59 @@
                                         <TextBlock Text="{Binding CompletedHeader}"
                                                    HorizontalAlignment="Left"
                                                    FontFamily="{StaticResource TodosFontFamily}"
-                                                   FontSize="12"
+                                                   FontSize="{DynamicResource Font12}"
                                                    FontWeight="SemiBold" />
                                         <controls:SvgIcon HorizontalAlignment="Right" Width="10" Height="7"
                                                           Source="Assets/Icons/chevron.svg"
                                                           Foreground="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}" />
                                     </Grid>
                                 </Button>
+                                    <Button Grid.Column="1" x:Name="ClearCompletedButton" Style="{StaticResource TaskActionStyle}"
+                                            Margin="{DynamicResource Space4_8_0_3}" VerticalAlignment="Center" Command="{Binding ClearCompletedCommand}"
+                                            ToolTip="Vaciar tareas completadas" automation:AutomationProperties.Name="Vaciar tareas completadas">
+                                        <controls:SvgIcon Source="Assets/Icons/trash.svg" Width="12" Height="14" Foreground="{DynamicResource TodosSecondaryTextBrush}" />
+                                    </Button>
+                                </Grid>
 
                                 <ItemsControl ItemsSource="{Binding CompletedTasks}"
                                               Visibility="{Binding AreCompletedTasksExpanded, Converter={StaticResource BoolToVisibility}}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="0,2" Padding="5,4" CornerRadius="10" Opacity="0.62"
+                                            <Border Margin="{DynamicResource Space0_2}" Padding="{DynamicResource Space5_4}" CornerRadius="10" Style="{StaticResource CompletedContextRowStyle}"
                                                     MouseLeftButtonDown="OnTaskRowMouseDown" ContextMenuOpening="OnTaskContextMenuOpening">
                                                 <Border.ContextMenu><ContextMenu /></Border.ContextMenu>
                                                 <Grid>
+                                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                                     <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <CheckBox Width="28"
-                                                              Height="32"
-                                                              Margin="0,0,4,0"
+                                                              Height="{DynamicResource Row32}"
+                                                              Margin="{DynamicResource Space0_0_4_0}"
                                                               VerticalAlignment="Center"
                                                               IsChecked="{Binding IsCompleted, Mode=TwoWay}"
                                                               ToolTip="Regresar a pendientes"
                                                               automation:AutomationProperties.Name="Reabrir tarea"
                                                               automation:AutomationProperties.HelpText="{Binding Text}" />
-                                                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                                                    <ContentControl x:Name="InlineSubtaskProgress" Grid.Column="1" Focusable="False" IsTabStop="False" VerticalAlignment="Center"
+                                                        Margin="{DynamicResource Space0_0_4_0}" Content="{Binding}" ContentTemplate="{StaticResource SubtaskToggleTemplate}"
+                                                        Visibility="{Binding HasSubtasks, Converter={StaticResource BoolToVisibility}}" />
+                                                    <Grid Grid.Column="2" VerticalAlignment="Center">
+<Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+<Button Grid.Column="1" Style="{StaticResource TaskActionStyle}" Click="OnOpenNotes" ToolTip="Ver nota" automation:AutomationProperties.Name="Ver nota" Visibility="{Binding HasNotes, Converter={StaticResource BoolToVisibility}}">
+    <controls:SvgIcon Source="Assets/Icons/note.svg" Width="14" Height="16" Foreground="{DynamicResource TodosBrandBrush}" />
+</Button>
                                                         <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibility}}"><TextBlock Text="{Binding Text}"
                                                                    TextWrapping="Wrap"
                                                                    TextDecorations="Strikethrough"
                                                                    Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibility}}"
                                                                    Foreground="{Binding DataContext.ColorTheme, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource ThemeBrush}, ConverterParameter=Text}"
                                                                    FontFamily="{StaticResource TodosFontFamily}"
-                                                                   FontSize="14" />
-                                                        <TextBlock Text="{Binding GroupName}" FontSize="10" Opacity="0.7" Margin="0,2,0,0" />
+                                                                   FontSize="{DynamicResource Font14}" />
+                                                        <TextBlock Text="{Binding GroupName}" FontSize="{DynamicResource Font10}" Opacity="0.7" Margin="{DynamicResource Space0_2_0_0}" />
                                                         </StackPanel>
                                                         <TextBox Style="{StaticResource TaskEditInputStyle}"
                                                                  Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}"
@@ -634,7 +748,7 @@
                                                                  LostKeyboardFocus="OnTaskEditLostFocus"
                                                                  automation:AutomationProperties.Name="Editar texto de tarea completada" />
                                                     </Grid>
-                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5,0,0,0">
+                                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="{DynamicResource Space5_0_0_0}">
                                                         <Button Style="{StaticResource TaskActionStyle}"
                                                                 Command="{Binding DeleteCommand}"
                                                                 Foreground="{DynamicResource TodosDangerBrush}"
@@ -643,6 +757,7 @@
                                                             <controls:SvgIcon Width="11" Height="13" Source="Assets/Icons/trash.svg" Foreground="{DynamicResource TodosDangerBrush}" />
                                                         </Button>
                                                     </StackPanel>
+                                                    <ContentControl Focusable="False" IsTabStop="False" Grid.Row="1" Grid.ColumnSpan="4" Content="{Binding}" ContentTemplate="{StaticResource SubtasksPanelTemplate}" />
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -652,8 +767,8 @@
                         </ScrollViewer>
 
                         <Border VerticalAlignment="Bottom"
-                                Margin="4"
-                                Padding="10,8"
+                                Margin="{DynamicResource Space4}"
+                                Padding="{DynamicResource Space10_8}"
                                 Visibility="{Binding IsUndoVisible, Converter={StaticResource BoolToVisibility}}"
                                 Background="{DynamicResource TodosHoverSurfaceBrush}"
                                 CornerRadius="11">
@@ -666,10 +781,10 @@
                                            TextTrimming="CharacterEllipsis"
                                            Foreground="{DynamicResource TodosTextBrush}"
                                            FontFamily="{StaticResource TodosFontFamily}"
-                                           FontSize="11" />
+                                           FontSize="{DynamicResource Font11}" />
                                 <Button Grid.Column="1"
                                         Style="{StaticResource UndoButtonStyle}"
-                                        Margin="8,0,0,0"
+                                        Margin="{DynamicResource Space8_0_0_0}"
                                         Command="{Binding UndoDeleteCommand}"
                                         Content="Deshacer"
                                         automation:AutomationProperties.Name="Deshacer eliminación de tarea"
@@ -691,7 +806,7 @@
                               automation:AutomationProperties.Name="Redimensionar ventana">
                 <primitives:Thumb.Template>
                     <ControlTemplate TargetType="primitives:Thumb">
-                        <Path Margin="4"
+                        <Path Margin="{DynamicResource Space4}"
                               Data="M2,14 L14,2 M7,14 L14,7"
                               Stroke="{Binding ColorTheme, Converter={StaticResource ThemeBrush}, ConverterParameter=Accent}"
                               StrokeThickness="1.5"
@@ -705,42 +820,53 @@
 
     <Popup x:Name="GroupMenuPopup" Placement="Left" HorizontalOffset="-9"
            StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" Closed="OnGroupMenuClosed">
-        <Border x:Name="GroupMenuSurface" Width="238" Padding="8" Background="{DynamicResource TodosPopupBrush}"
+        <Border x:Name="GroupMenuSurface" Width="238" Padding="{DynamicResource Space8}" Background="{DynamicResource TodosPopupBrush}"
                 BorderBrush="#16000000" BorderThickness="1" CornerRadius="17" PreviewKeyDown="OnGroupMenuKeyDown" KeyboardNavigation.TabNavigation="Cycle">
             <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="7" Opacity="0.22" Color="#000000" /></Border.Effect>
             <StackPanel>
-                <TextBlock x:Name="GroupMenuCaption" Margin="10,5,10,7" FontWeight="SemiBold" Foreground="{DynamicResource TodosTextBrush}" />
-                <ScrollViewer MaxHeight="210" VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="GroupMenuCaption" Margin="{DynamicResource Space10_5_10_7}" FontWeight="SemiBold" Foreground="{DynamicResource TodosTextBrush}" />
+                <Button x:Name="AddSubtaskMenuButton" Style="{StaticResource GroupMenuItemStyle}" Content="Agregar subtarea" Click="OnAddSubtaskMenu" Visibility="Collapsed" />
+                <Button x:Name="NotesMenuButton" Style="{StaticResource GroupMenuItemStyle}" Click="OnNotesMenu" Visibility="Collapsed" />
+                <Button x:Name="EditTaskMenuButton" Style="{StaticResource GroupMenuItemStyle}" Content="Editar subtarea" Click="OnEditTaskMenu" Visibility="Collapsed" />
+                <Button x:Name="CompleteTaskMenuButton" Style="{StaticResource GroupMenuItemStyle}" Click="OnCompleteTaskMenu" Visibility="Collapsed" />
+                <Button x:Name="DeleteTaskMenuButton" Style="{StaticResource GroupMenuItemStyle}" Click="OnDeleteTaskMenu" Foreground="{DynamicResource TodosDangerBrush}" Visibility="Collapsed" />
+                <TextBlock x:Name="MoveGroupCaption" Text="Mover a grupo" FontWeight="SemiBold" FontSize="{DynamicResource Font12}" Margin="{DynamicResource Space10_5_10_7}" Visibility="Collapsed" />
+                <ScrollViewer Style="{StaticResource TodosSlimScrollViewer}" MaxHeight="210" VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="GroupMenuItems" ItemsSource="{Binding Groups}">
                         <ItemsControl.ItemTemplate><DataTemplate>
-                            <Button Style="{StaticResource GroupMenuItemStyle}" Click="OnChooseMenuGroup" Margin="0,1"
+                            <Button Style="{StaticResource GroupMenuItemStyle}" Click="OnChooseMenuGroup" Margin="{DynamicResource Space0_1}"
                                     automation:AutomationProperties.Name="{Binding Name}">
-                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontSize="14" />
+                                <TextBlock TextTrimming="CharacterEllipsis" FontSize="{DynamicResource Font14}">
+                                    <TextBlock.Style><Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="{Binding Name, StringFormat='Mover a {0}'}" />
+                                        <Style.Triggers><DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="False"><Setter Property="Text" Value="{Binding Name}" /></DataTrigger></Style.Triggers>
+                                    </Style></TextBlock.Style>
+                                </TextBlock>
                             </Button>
                         </DataTemplate></ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
                 <Button x:Name="CreateGroupMenuButton" Style="{StaticResource GroupMenuItemStyle}" Content="+ Grupo" Click="OnShowGroupEditor" />
-                        <Grid x:Name="GroupEditorPanel" Visibility="Collapsed" Margin="0,6,0,0">
+                        <Grid x:Name="GroupEditorPanel" Visibility="Collapsed" Margin="{DynamicResource Space0_6_0_0}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <TextBox x:Name="GroupNameEditor" Style="{StaticResource RoundedTaskInputStyle}"
-                                     Tag="Nombre del grupo" MaxLength="80" MinHeight="32"
+                                     Tag="Nombre del grupo" MaxLength="80" MinHeight="{DynamicResource Row32}"
                                      Text="{Binding NewGroupName, UpdateSourceTrigger=PropertyChanged}"
                                      KeyDown="OnNewGroupKeyDown" automation:AutomationProperties.Name="Nombre del nuevo grupo" />
-                            <Button Grid.Column="1" Margin="7,0,0,0" Padding="8,4" Content="Crear"
+                            <Button Grid.Column="1" Margin="{DynamicResource Space7_0_0_0}" Padding="{DynamicResource Space8_4}" Content="Crear"
                                     Style="{StaticResource SurfaceButtonStyle}" Click="OnCreateGroup" />
                         </Grid>
 
-                <TextBlock Text="{Binding GroupError}" TextWrapping="Wrap" Foreground="{DynamicResource TodosDangerBrush}" FontSize="11" />
+                <TextBlock Text="{Binding GroupError}" TextWrapping="Wrap" Foreground="{DynamicResource TodosDangerBrush}" FontSize="{DynamicResource Font11}" />
             </StackPanel>
         </Border>
     </Popup>
     <Popup x:Name="DeleteGroupPopup" Placement="Left" HorizontalOffset="-9" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
-        <Border x:Name="DeleteGroupSurface" Width="258" Padding="16" Background="{DynamicResource TodosPopupBrush}"
+        <Border x:Name="DeleteGroupSurface" Width="258" Padding="{DynamicResource Space16}" Background="{DynamicResource TodosPopupBrush}"
                 BorderBrush="#16000000" BorderThickness="1" CornerRadius="17" PreviewKeyDown="OnDeleteGroupKeyDown" KeyboardNavigation.TabNavigation="Cycle">
             <StackPanel>
-                <TextBlock Text="Eliminar agrupación" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TodosTextBrush}" />
-                <TextBlock x:Name="DeleteGroupMessage" TextWrapping="Wrap" Margin="0,9,0,12" Foreground="{DynamicResource TodosTextBrush}" />
+                <TextBlock Text="Eliminar agrupación" FontWeight="SemiBold" FontSize="{DynamicResource Font15}" Foreground="{DynamicResource TodosTextBrush}" />
+                <TextBlock x:Name="DeleteGroupMessage" TextWrapping="Wrap" Margin="{DynamicResource Space0_9_0_12}" Foreground="{DynamicResource TodosTextBrush}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="CancelDeleteGroupButton" Content="Cancelar" Style="{StaticResource GroupMenuItemStyle}" Click="OnCancelDeleteGroup" />
                     <Button Content="Eliminar" Foreground="{DynamicResource TodosDangerBrush}" Style="{StaticResource GroupMenuItemStyle}" Click="OnConfirmDeleteGroup" />
@@ -757,7 +883,7 @@
            StaysOpen="False"
            AllowsTransparency="True"
            PopupAnimation="Fade">
-        <Border Padding="9" Background="{DynamicResource TodosPopupBrush}" CornerRadius="16">
+        <Border Padding="{DynamicResource Space9}" Background="{DynamicResource TodosPopupBrush}" CornerRadius="16">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="18" ShadowDepth="5" Opacity="0.18" Color="#000000" />
             </Border.Effect>

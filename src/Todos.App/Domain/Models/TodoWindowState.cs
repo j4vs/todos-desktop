@@ -25,6 +25,8 @@ public sealed class TodoWindowState
     public List<TodoTaskGroup> Groups { get; set; } = [];
     public bool IsGeneralGroupExpanded { get; set; } = true;
 
+    public DateTimeOffset? TrashedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

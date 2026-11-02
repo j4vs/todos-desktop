@@ -8,6 +8,27 @@ namespace Todos.Tests;
 internal static class PersistenceTests
 {
     [Test]
+    public static async Task QuickAccessSurvivesSnapshotSaveRestartAndDeletedAssociationIsCleared()
+    {
+        using var directory = new TemporaryDirectory();
+        var repository = new JsonAppStateRepository(new AppDataPaths(directory.Path));
+        var state = CreateState("Conservar tarea existente");
+        state.Settings.AutoMinimizeWindows = true;
+        state.LauncherState.LastMinimizedWindowId = state.TodoWindows[0].Id;
+        var snapshot = AppStateSnapshot.Clone(state);
+        state.Settings.AutoMinimizeWindows = false;
+        state.LauncherState.LastMinimizedWindowId = null;
+        await repository.SaveAsync(snapshot);
+        var restored = (await repository.LoadAsync()).State;
+        Assert.True(restored.Settings.AutoMinimizeWindows);
+        Assert.Equal(snapshot.TodoWindows[0].Id, restored.LauncherState.LastMinimizedWindowId);
+        Assert.Equal("Conservar tarea existente", restored.TodoWindows[0].Tasks[0].Text);
+        restored.TodoWindows.Clear();
+        restored.TodoWindows.Add(new TodoWindowState { IsVisible = false });
+        Assert.Equal<Guid?>(null, AppStateNormalizer.Normalize(restored).LauncherState.LastMinimizedWindowId);
+    }
+
+    [Test]
     public static async Task StateRoundTripPreservesUnicodeAndSettings()
     {
         using var directory = new TemporaryDirectory();
@@ -56,6 +77,8 @@ internal static class PersistenceTests
         Assert.NotNull(result.State.Settings);
         Assert.True(result.State.Settings.RunAtWindowsStartup);
         Assert.NotNull(result.State.LauncherState);
+        Assert.False(result.State.Settings.AutoMinimizeWindows);
+        Assert.Equal<Guid?>(null, result.State.LauncherState.LastMinimizedWindowId);
     }
 
     [Test]

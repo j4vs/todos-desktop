@@ -1,5 +1,21 @@
 Necesito que me ayudes a desarrollar un programa para windows a partir de mi problemática
 
+Estado actual 1.8.2: corrección defensiva de clics fuera tras tiempo/reanudación. ScreenInteraction utiliza HWND y bounds físicos de Windows; no PointFromScreen/ActualWidth de WPF. OutsideClickMonitor renueva el hook al reanudar/cambiar pantallas e invalida acciones pendientes con generación en suspensión/renovación/cierre. Conserva snapshot del clic principal y huecos de popups. Esquema 5 sin cambios. Validación de reanudación simulada y DPI/layout en segundo monitor; hibernación real pendiente del usuario.
+
+Estado actual 1.8.1: arrastre de subtareas homologado con tareas: preview real, atenuación del origen, línea independiente sin borde redondeado ni cambio de altura, destino estable en márgenes, scroll y animación al reordenar dentro de la principal. Se mantiene esquema 5 y notas Markdown. Pruebas WPF en segundo monitor; portable 1.8.1.
+
+Estado actual 1.8.0: una nota Markdown por tarea/subtarea, pestañas Visualizar/Editar en ventana propia, guardado automático real e importar/exportar .md con confirmación de reemplazo. Ícono en filas con notas y acceso contextual Agregar nota/Ver nota. Sin imágenes; render nativo de WPF con Markdig 1.3.2, sin HTML ejecutable. Notas conservadas en snapshot, grupos, completado, eliminación/deshacer y Papelera. Ventana y diálogos de notas pertenecen a la lista a efectos de minimización automática. Esquema 5 migra 1–4. Pruebas y revisión en segundo monitor; portable 1.8.0.
+
+Estado actual 1.7.2: corrección del resaltado exclusivo al cambiar de tarea/subtarea y retirada de su nombre del menú contextual. Portable compilado y empaquetado para revisión del usuario, sin ejecutar pruebas ni abrir ventanas en esta entrega. Se conserva esquema 4.
+
+Estado actual 1.7.1: subtareas de un nivel, avance/plegado junto al checkbox, captura/edición en línea y orden por arrastre/teclado dentro de la principal. Menú junto al cursor con fila resaltada y acciones Editar, Completar/Reabrir, Eliminar; principales añaden Agregar subtarea y «Mover a [grupo]». Retirada la opción de conversión. La etiqueta del principal se oculta durante su arrastre. Completar todos los pasos completa la raíz; casilla de raíz completa todos y ofrece Deshacer. Árbol conservado al mover grupo, borrar/deshacer y restaurar Papelera. Esquema 4 migra versiones 1–3. Ventanas de pruebas dirigidas al monitor secundario si existe.
+
+Estado anterior 1.6.0: apariencia global desde Configuración, letra −/+ (80–140 %), tamaño del principal Chico/Mediano/Grande (40/52/68) y espaciado Chico/Mediano/Grande (.75/1/1.3). Aplicación inmediata y guardado en AppSettings/snapshot; esquema 3 compatible. Mediano y letra 100 % conservan valores anteriores.
+
+Estado anterior 1.5.0: acción Minimizar entre Salir y Configuración oculta solo el principal y sus menús. Menú del área de notificación Mostrar botón / Ocultar botón dinámico; doble clic recupera el principal. Visibilidad de sesión, botón visible al reiniciar. Las listas, posición y acceso rápido permanecen.
+
+Estado anterior 1.4.0: menú de lista oculta junto al círculo, papelera compacta y flecha restaurar corregida. Grupos personalizados reordenables con flechas y renombrables con lápiz; General fijo. Vaciar completadas por lista con deshacer de lote de cinco segundos. Se mantiene esquema 3.
+
 Uso codex para desarrollar aplicaciones web, generalmente separo en dos proyectos de codex para un proyecto
 - Un proyecto para frontend
 - Otro proyecto para backend
@@ -61,7 +77,7 @@ La aplicación deberá de ser fácil de usar
 
 ## Estado implementado
 
-La necesidad anterior dio origen a **Todo's 1.1.4**, una aplicación WPF portable
+La necesidad anterior dio origen a **Todo's 1.3.1**, una aplicación WPF portable
 para Windows 10/11 x64. El alcance vigente incluye:
 
 - botón flotante de 52 × 52 que conserva su posición y permanece por encima de
@@ -72,8 +88,9 @@ para Windows 10/11 x64. El alcance vigente incluye:
   deshacer y reordenamiento visual de tareas;
 - encabezado arrastrable para mover cada lista, siete colores pastel y tipografía
   Fredoka integrada;
-- ocultar, mostrar y eliminar listas ocultas desde un submenú lateral; la opción
-  queda desactivada cuando no existen listas ocultas;
+- botón circular vectorial con acceso rápido a la última lista minimizada;
+- hover de un segundo para recuperar listas ocultas, acciones redondas con clic
+  derecho y configuración de minimización automática opcional;
 - persistencia local automática, respaldo, recuperación, instancia única e
   inicio con Windows activado de forma predeterminada;
 - icono en el área de notificación y salida segura con guardado confirmado;
@@ -83,6 +100,34 @@ para Windows 10/11 x64. El alcance vigente incluye:
 Los detalles operativos actuales están en `/.codex/manual-usuario.md`; las
 decisiones técnicas vigentes, en `/.codex/decisiones-tecnicas.md`; y el historial
 de implementación y validación, en `/.codex/progreso.md`.
+
+### Acceso rápido — 1.3.1
+
+El ícono del ejecutable y de notificación es circular morado con check y borde
+blancos. SVG canónico genera PNG e ICO con nueve tamaños, sin fondo cuadrado.
+
+La asociación, título y color de la última lista minimizada se conservan al
+reiniciar. Clic izquierdo la muestra/enfoca, o despliega ocultas si no hay
+asociación. Eliminar la lista asociada vuelve al morado original sin fallback.
+Hover continuo de un segundo muestra ocultas; clic derecho muestra acciones
+moradas Salir, Configuración, Papelera y Nueva lista y prevalece sobre hover. Configuración
+contiene inicio con Windows y minimización automática opcional, apagada al inicio.
+Clic fuera/Escape cierra los desplegables animados. Se migra al esquema 3.
+
+Etiquetas laterales de 13 px, a derecha si no hay espacio a izquierda. El título
+principal aparece solo en hover y el color usa el acento un 10 % más oscuro.
+check.svg se usa en principal, ocultas y tareas marcadas. Scroll delgado de 10 px.
+Checks de principal y ocultas blancos y más pequeños; configuración activada usa checkbox-checked.svg.
+Configuración oculta acciones y centra textos. Con auto-minimización, pulsar
+principal mientras su lista está abierta solo la oculta, sin volver a abrirla.
+
+### Papelera — 1.3.0
+
+Borrar una lista la mueve sin confirmación nativa a TrashedWindows. Clic derecho
+sobre una lista oculta ofrece Mover a papelera. El nuevo botón Papelera abre
+una ventana con Restaurar y eliminación definitiva con confirmación propia.
+Persisten listas completas, tareas y grupos; restaurar conserva identidad y abre
+la ventana. Eliminar la asociación la limpia; restaurar no elige un acceso rápido.
 
 ### Ampliación 1.1.0
 

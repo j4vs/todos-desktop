@@ -2,12 +2,12 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:Todos.Presentation.Controls">
     <Style TargetType="ToolTip">
-        <Setter Property="Padding" Value="9,6" />
+        <Setter Property="Padding" Value="{DynamicResource Space9_6}" />
         <Setter Property="Foreground" Value="{DynamicResource TodosPopupBrush}" />
         <Setter Property="Background" Value="{DynamicResource TodosTextBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="FontFamily" Value="{StaticResource TodosFontFamily}" />
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="{DynamicResource Font11}" />
         <Setter Property="HasDropShadow" Value="True" />
     </Style>
 
@@ -15,7 +15,7 @@
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Margin="2"
+                    <Border Margin="{DynamicResource Space2}"
                             BorderBrush="{DynamicResource TodosFocusBrush}"
                             BorderThickness="2"
                             CornerRadius="6" />
@@ -34,10 +34,83 @@
         <Setter Property="FontFamily" Value="{StaticResource TodosFontFamily}" />
     </Style>
 
+    <Style x:Key="TodosSlimScrollBar" TargetType="ScrollBar">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="{DynamicResource Row0}" />
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="Transparent">
+                        <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True"
+                               Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                               ViewportSize="{TemplateBinding ViewportSize}" Value="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageUpCommand" Focusable="False">
+                                    <RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent" /></ControlTemplate></RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb MinHeight="{DynamicResource Row24}">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border x:Name="ThumbSurface" Margin="{DynamicResource Space2}" CornerRadius="3" Background="{DynamicResource TodosSecondaryTextBrush}" Opacity="0.4" />
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ThumbSurface" Property="Opacity" Value="0.7" /></Trigger>
+                                                <Trigger Property="IsDragging" Value="True"><Setter TargetName="ThumbSurface" Property="Opacity" Value="0.9" /></Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageDownCommand" Focusable="False">
+                                    <RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent" /></ControlTemplate></RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation" Value="Horizontal"><Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto" /><Setter Property="Height" Value="{DynamicResource Row10}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="TodosSlimScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollViewer">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Margin="{TemplateBinding Padding}"
+                            Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                            CanContentScroll="{TemplateBinding CanContentScroll}" />
+                        <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Style="{StaticResource TodosSlimScrollBar}"
+                            Orientation="Vertical" Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
+                            Value="{Binding VerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                        <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Row="1" Style="{StaticResource TodosSlimScrollBar}"
+                            Orientation="Horizontal" Maximum="{TemplateBinding ScrollableWidth}" ViewportSize="{TemplateBinding ViewportWidth}"
+                            Value="{Binding HorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                            Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="CheckBox">
         <Setter Property="FocusVisualStyle" Value="{StaticResource TodosFocusVisualStyle}" />
         <Setter Property="FontFamily" Value="{StaticResource TodosFontFamily}" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
@@ -54,16 +127,23 @@
                                               Source="Assets/Icons/checkbox.svg"
                                               Foreground="{DynamicResource TodosSecondaryTextBrush}" />
                             <ContentPresenter Grid.Column="1"
-                                              Margin="7,0,0,0"
+                                              Margin="{DynamicResource Space7_0_0_0}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="CheckIcon" Property="Source" Value="Assets/Icons/checkbox-checked.svg" />
+                            <Setter TargetName="CheckIcon" Property="Source" Value="Assets/Icons/check.svg" />
                             <Setter TargetName="CheckIcon" Property="Foreground" Value="{DynamicResource TodosBrandBrush}" />
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True" />
+                                <Condition Property="Tag" Value="Configuration" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="CheckIcon" Property="Source" Value="Assets/Icons/checkbox-checked.svg" />
+                        </MultiTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="CheckSurface" Property="Background" Value="{DynamicResource TodosHoverSurfaceBrush}" />
                         </Trigger>

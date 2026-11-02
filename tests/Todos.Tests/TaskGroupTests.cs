@@ -8,6 +8,64 @@ namespace Todos.Tests;
 internal static class TaskGroupTests
 {
     [Test]
+    public static async Task GroupOrderAndRenameSurviveRestartWithoutChangingTasks()
+    {
+        var state = new AppState { TodoWindows = [new TodoWindowState()] };
+        var list = state.TodoWindows[0];
+        var now = DateTimeOffset.UtcNow;
+        var a = TodoListOperations.AddGroup(list, "Backend", now);
+        var b = TodoListOperations.AddGroup(list, "Frontend", now);
+        var task = TodoListOperations.AddTask(list, "Conservar", now, a.Id);
+        using (var vm = new TodoWindowViewModel(list, () => { }, () => { }, () => { }))
+        {
+            var group = vm.Groups.Single(item => item.Id == b.Id);
+            vm.MoveGroup(group, -1);
+            vm.MoveGroup(group, -1); // Boundary is a no-op.
+            vm.MoveGroup(vm.Groups[0], 1); // General is fixed.
+            Assert.SequenceEqual(new Guid?[] { null, b.Id, a.Id }, vm.Groups.Select(item => item.Id));
+            group.Name = "Interfaz";
+            vm.RenameGroup(group);
+            group.Name = "Backend";
+            vm.RenameGroup(group);
+            Assert.Equal("Interfaz", group.Name);
+            Assert.True(!string.IsNullOrEmpty(vm.GroupError));
+        }
+        using var directory = new PersistenceTests.TemporaryDirectory();
+        var repository = new JsonAppStateRepository(new AppDataPaths(directory.Path));
+        await repository.SaveAsync(state);
+        var restored = (await repository.LoadAsync()).State.TodoWindows[0];
+        Assert.SequenceEqual(new[] { b.Id, a.Id }, restored.Groups.Select(item => item.Id));
+        Assert.Equal("Interfaz", restored.Groups[0].Name);
+        Assert.Equal<Guid?>(a.Id, restored.Tasks.Single().GroupId);
+        Assert.Equal(task.Id, restored.Tasks.Single().Id);
+    }
+
+    [Test]
+    public static void ClearCompletedCanUndoWholeBatchAndPreservesPendingAndGroups()
+    {
+        var list = new TodoWindowState();
+        var now = DateTimeOffset.UtcNow;
+        var group = TodoListOperations.AddGroup(list, "Trabajo", now);
+        var pending = TodoListOperations.AddTask(list, "Pendiente", now, group.Id);
+        var a = TodoListOperations.AddTask(list, "Lista", now, group.Id);
+        var b = TodoListOperations.AddTask(list, "Otra", now);
+        TodoListOperations.CompleteTask(list, a.Id, now);
+        TodoListOperations.CompleteTask(list, b.Id, now);
+        using var vm = new TodoWindowViewModel(list, () => { }, () => { }, () => { });
+        vm.ClearCompletedCommand.Execute(null);
+        Assert.Equal(0, vm.CompletedCount);
+        Assert.Equal(pending.Id, vm.PendingTasks.Single().Id);
+        Assert.False(vm.ClearCompletedCommand.CanExecute(null));
+        Assert.True(vm.IsUndoVisible);
+        vm.UndoDeleteCommand.Execute(null);
+        Assert.Equal(2, vm.CompletedCount);
+        Assert.Equal<Guid?>(group.Id, list.Tasks.Single(item => item.Id == a.Id).GroupId);
+        Assert.Equal<DateTimeOffset?>(now, list.Tasks.Single(item => item.Id == a.Id).CompletedAt);
+        Assert.Equal(1, list.Groups.Count);
+        Assert.False(vm.IsUndoVisible);
+    }
+
+    [Test]
     public static async Task AccordionStateSurvivesRefreshSnapshotAndRestart()
     {
         var state = new AppState { TodoWindows = [new TodoWindowState()] };
@@ -49,7 +107,7 @@ internal static class TaskGroupTests
         var repository = new JsonAppStateRepository(paths);
         var state = (await repository.LoadAsync()).State;
         var window = state.TodoWindows[0];
-        Assert.Equal(2, state.SchemaVersion);
+        Assert.Equal(AppConstants.CurrentSchemaVersion, state.SchemaVersion);
         Assert.Equal<Guid?>(null, window.Tasks[0].GroupId);
         var group = TodoListOperations.AddGroup(window, "Verificación", DateTimeOffset.UtcNow);
         TodoListOperations.MoveTaskToGroup(window, window.Tasks[0].Id, group.Id, 0, DateTimeOffset.UtcNow);

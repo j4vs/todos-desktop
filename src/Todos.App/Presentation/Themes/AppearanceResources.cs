@@ -1,0 +1,113 @@
+using System.Windows;
+using Todos.Domain.Models;
+
+namespace Todos.Presentation.Themes;
+
+public static class AppearanceResources
+{
+    public static event Action? Changed;
+    public static void Apply(AppSettings settings)
+    {
+        var resources = System.Windows.Application.Current.Resources;
+        var fontScale = 1 + Math.Clamp(settings.FontSizeStep, -2, 4) * .1;
+        var density = settings.SpacingSize switch { 0 => .75, 2 => 1.3, _ => 1d };
+        var diameter = settings.LauncherSize switch { 0 => 40d, 2 => 68d, _ => 52d };
+        resources["Space20_0_0_0"] = new Thickness(20 * density, 0, 0, 0);
+        resources["LauncherDiameter"] = diameter;
+        resources["LauncherCheckWidth"] = diameter * 27 / 52;
+        resources["LauncherCheckHeight"] = diameter * 22 / 52;
+        resources["Font10"] = 10d * fontScale;
+        resources["Font11"] = 11d * fontScale;
+        resources["Font12"] = 12d * fontScale;
+        resources["Font12p5"] = 12.5d * fontScale;
+        resources["Font13"] = 13d * fontScale;
+        resources["Font13p5"] = 13.5d * fontScale;
+        resources["Font14"] = 14d * fontScale;
+        resources["Font15"] = 15d * fontScale;
+        resources["Font16"] = 16d * fontScale;
+        resources["Font18"] = 18d * fontScale;
+        resources["Font21"] = 21d * fontScale;
+        resources["Row0"] = 0d * density * Math.Max(1, fontScale);
+        resources["Row10"] = 10d * density * Math.Max(1, fontScale);
+        resources["Row24"] = 24d * density * Math.Max(1, fontScale);
+        resources["Row27"] = 27d * density * Math.Max(1, fontScale);
+        resources["Row28"] = 28d * density * Math.Max(1, fontScale);
+        resources["Row31"] = 31d * density * Math.Max(1, fontScale);
+        resources["Row32"] = 32d * density * Math.Max(1, fontScale);
+        resources["Row34"] = 34d * density * Math.Max(1, fontScale);
+        resources["Row40"] = 40d * density * Math.Max(1, fontScale);
+        resources["Row42"] = 42d * density * Math.Max(1, fontScale);
+        resources["Space0"] = Scale(new Thickness(0.0, 0.0, 0.0, 0.0), density);
+        resources["Space0_0_0_10"] = Scale(new Thickness(0.0, 0.0, 0.0, 10.0), density);
+        resources["Space0_0_0_6"] = Scale(new Thickness(0.0, 0.0, 0.0, 6.0), density);
+        resources["Space0_0_4_0"] = Scale(new Thickness(0.0, 0.0, 4.0, 0.0), density);
+        resources["Space0_0_8_0"] = Scale(new Thickness(0.0, 0.0, 8.0, 0.0), density);
+        resources["Space0_0_9_0"] = Scale(new Thickness(0.0, 0.0, 9.0, 0.0), density);
+        resources["Space0_1"] = Scale(new Thickness(0.0, 1.0, 0.0, 1.0), density);
+        resources["Space0_10_0_0"] = Scale(new Thickness(0.0, 10.0, 0.0, 0.0), density);
+        resources["Space0_14_0_0"] = Scale(new Thickness(0.0, 14.0, 0.0, 0.0), density);
+        resources["Space0_14_12_8"] = Scale(new Thickness(0.0, 14.0, 12.0, 8.0), density);
+        resources["Space0_2"] = Scale(new Thickness(0.0, 2.0, 0.0, 2.0), density);
+        resources["Space0_28_0_0"] = Scale(new Thickness(0.0, 28.0, 0.0, 0.0), density);
+        resources["Space0_2_0_0"] = Scale(new Thickness(0.0, 2.0, 0.0, 0.0), density);
+        resources["Space0_3"] = Scale(new Thickness(0.0, 3.0, 0.0, 3.0), density);
+        resources["Space0_3_0_0"] = Scale(new Thickness(0.0, 3.0, 0.0, 0.0), density);
+        resources["Space0_3_0_8"] = Scale(new Thickness(0.0, 3.0, 0.0, 8.0), density);
+        resources["Space0_4_0_12"] = Scale(new Thickness(0.0, 4.0, 0.0, 12.0), density);
+        resources["Space0_6_0_0"] = Scale(new Thickness(0.0, 6.0, 0.0, 0.0), density);
+        resources["Space0_7_0_0"] = Scale(new Thickness(0.0, 7.0, 0.0, 0.0), density);
+        resources["Space0_8_0_3"] = Scale(new Thickness(0.0, 8.0, 0.0, 3.0), density);
+        resources["Space0_9_0_12"] = Scale(new Thickness(0.0, 9.0, 0.0, 12.0), density);
+        resources["Space10"] = Scale(new Thickness(10.0, 10.0, 10.0, 10.0), density);
+        resources["Space10_0"] = Scale(new Thickness(10.0, 0.0, 10.0, 0.0), density);
+        resources["Space10_5_10_7"] = Scale(new Thickness(10.0, 5.0, 10.0, 7.0), density);
+        resources["Space10_6_10_8"] = Scale(new Thickness(10.0, 6.0, 10.0, 8.0), density);
+        resources["Space10_8"] = Scale(new Thickness(10.0, 8.0, 10.0, 8.0), density);
+        resources["Space11_5"] = Scale(new Thickness(11.0, 5.0, 11.0, 5.0), density);
+        resources["Space12"] = Scale(new Thickness(12.0, 12.0, 12.0, 12.0), density);
+        resources["Space12_0"] = Scale(new Thickness(12.0, 0.0, 12.0, 0.0), density);
+        resources["Space12_8"] = Scale(new Thickness(12.0, 8.0, 12.0, 8.0), density);
+        resources["Space13_0_11_0"] = Scale(new Thickness(13.0, 0.0, 11.0, 0.0), density);
+        resources["Space14"] = Scale(new Thickness(14.0, 14.0, 14.0, 14.0), density);
+        resources["Space15_14_0_8"] = Scale(new Thickness(15.0, 14.0, 0.0, 8.0), density);
+        resources["Space16"] = Scale(new Thickness(16.0, 16.0, 16.0, 16.0), density);
+        resources["Space1p5"] = Scale(new Thickness(1.5, 1.5, 1.5, 1.5), density);
+        resources["Space2"] = Scale(new Thickness(2.0, 2.0, 2.0, 2.0), density);
+        resources["Space2_0"] = Scale(new Thickness(2.0, 0.0, 2.0, 0.0), density);
+        resources["Space2_0_0_0"] = Scale(new Thickness(2.0, 0.0, 0.0, 0.0), density);
+        resources["Space2_0_2_3"] = Scale(new Thickness(2.0, 0.0, 2.0, 3.0), density);
+        resources["Space3"] = Scale(new Thickness(3.0, 3.0, 3.0, 3.0), density);
+        resources["Space3_0_0_5"] = Scale(new Thickness(3.0, 0.0, 0.0, 5.0), density);
+        resources["Space3_2_0_0"] = Scale(new Thickness(3.0, 2.0, 0.0, 0.0), density);
+        resources["Space4"] = Scale(new Thickness(4.0, 4.0, 4.0, 4.0), density);
+        resources["Space4_0"] = Scale(new Thickness(4.0, 0.0, 4.0, 0.0), density);
+        resources["Space4_2_0_16"] = Scale(new Thickness(4.0, 2.0, 0.0, 16.0), density);
+        resources["Space4_5"] = Scale(new Thickness(4.0, 5.0, 4.0, 5.0), density);
+        resources["Space4_8_0_3"] = Scale(new Thickness(4.0, 8.0, 0.0, 3.0), density);
+        resources["Space5"] = Scale(new Thickness(5.0, 5.0, 5.0, 5.0), density);
+        resources["Space5_0_0_0"] = Scale(new Thickness(5.0, 0.0, 0.0, 0.0), density);
+        resources["Space5_4"] = Scale(new Thickness(5.0, 4.0, 5.0, 4.0), density);
+        resources["Space6_0"] = Scale(new Thickness(6.0, 0.0, 6.0, 0.0), density);
+        resources["Space6_0_0_0"] = Scale(new Thickness(6.0, 0.0, 0.0, 0.0), density);
+        resources["Space6_12_6_6"] = Scale(new Thickness(6.0, 12.0, 6.0, 6.0), density);
+        resources["Space6_2_6_10"] = Scale(new Thickness(6.0, 2.0, 6.0, 10.0), density);
+        resources["Space7_0"] = Scale(new Thickness(7.0, 0.0, 7.0, 0.0), density);
+        resources["Space7_0_0_0"] = Scale(new Thickness(7.0, 0.0, 0.0, 0.0), density);
+        resources["Space7_3"] = Scale(new Thickness(7.0, 3.0, 7.0, 3.0), density);
+        resources["Space8"] = Scale(new Thickness(8.0, 8.0, 8.0, 8.0), density);
+        resources["Space8_0_0_0"] = Scale(new Thickness(8.0, 0.0, 0.0, 0.0), density);
+        resources["Space8_0_8_8"] = Scale(new Thickness(8.0, 0.0, 8.0, 8.0), density);
+        resources["Space8_0_8_n1"] = Scale(new Thickness(8.0, 0.0, 8.0, -1.0), density);
+        resources["Space8_3"] = Scale(new Thickness(8.0, 3.0, 8.0, 3.0), density);
+        resources["Space8_4"] = Scale(new Thickness(8.0, 4.0, 8.0, 4.0), density);
+        resources["Space8_7"] = Scale(new Thickness(8.0, 7.0, 8.0, 7.0), density);
+        resources["Space8_n1_8_0"] = Scale(new Thickness(8.0, -1.0, 8.0, 0.0), density);
+        resources["Space9"] = Scale(new Thickness(9.0, 9.0, 9.0, 9.0), density);
+        resources["Space9_5"] = Scale(new Thickness(9.0, 5.0, 9.0, 5.0), density);
+        resources["Space9_6"] = Scale(new Thickness(9.0, 6.0, 9.0, 6.0), density);
+        Changed?.Invoke();
+    }
+
+    private static Thickness Scale(Thickness value, double factor) =>
+        new(value.Left * factor, value.Top * factor, value.Right * factor, value.Bottom * factor);
+}

@@ -15,6 +15,7 @@ public sealed class TodoThemeBrushConverter : IValueConverter
         var key = parameter as string;
         var color = key switch
         {
+            "Launcher" => TodoThemePalette.GetLauncherBackground(theme),
             "Surface" => colors.Surface,
             "Accent" => colors.Accent,
             "Text" => colors.Text,

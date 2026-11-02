@@ -1,5 +1,112 @@
 # Plan de trabajo — Todo's
 
+## Versión 1.8.2 — recuperación de clics fuera (2026-10-14)
+
+Reporte: minimización al pulsar dentro y menú del principal que se cierra solo, posiblemente tras tiempo/hibernación; reiniciar restaura el funcionamiento. Reemplazar límites WPF por HWND/bounds físicos, renovar hook al reanudar/cambiar pantallas e invalidar clics previos. Validar escalas, layout nativo pendiente, menús/popups, clic externo y mensajes de reanudación simulados en segundo monitor. No hibernar la computadora del usuario. Conservar datos y esquema 5.
+
+Completado: build limpio, 65/65 pruebas, reproducción controlada del desfase por resize nativo anterior al layout y corrección verificada. Mensajes de recuperación simulados y descarte de acciones antiguas comprobados. Portable 1.8.2.0 extraído y hashes/inicio/reinicio verificados con datos aislados. Hibernación real y disparador exacto del reporte pendientes del usuario.
+
+## Versión 1.8.1 — refinamiento de arrastre de subtareas
+
+Homologar preview, atenuación y feedback con tareas principales; indicador recto y estable sin modificar layout, márgenes válidos como destino y limpieza al cancelar/soltar. Conservar reordenamiento solo dentro de principal y preservar notas. Validación por eventos/renders WPF en segundo monitor y portable.
+
+## Versión 1.8.0 — notas Markdown autorizadas 2026-10-12
+
+Alcance aprobado: una nota por tarea/subtarea, editor y visualizador en pestañas, sin imágenes. Acceso contextual e ícono; guardado automático, importar/exportar .md, preservar en grupos, completado, deshacer y Papelera. Ventana con tema de lista y letra global; familia de interacción para minimización automática. Esquema 5 con migración de 1–4.
+
+Completado: build limpio, 65/65 pruebas, formato y flujos WPF revisados en segundo monitor. ZIP 1.8.0.0 extraído y hashes correctos; migración y reinicio nativos conservaron árboles, notas exactas y preferencias. Evidencia en artifacts/notes-1.8.0-tests.txt y artifacts/notes-1.8.0-package/verification.txt. Interacción física de ratón pendiente.
+
+## Versión 1.7.1 — revisión de menús y compactación 2026-10-12
+
+Menú junto al cursor, fila resaltada, textos explícitos y acciones comunes de tareas/subtareas. Retirar conversión de la interfaz. Avance y flecha junto al checkbox; ocultar etiqueta del launcher al arrastrar. Validar posición/foco/acciones y portátil en datos aislados; ventanas de revisión en monitor secundario.
+
+Completado: build limpio, 60/60 pruebas, renders WPF revisados y monitor secundario comprobado al cargar. ZIP 1.7.1.0 extraído con hashes correctos; dos inicios nativos conservaron esquema, preferencias, asociación, grupos y árboles. Evidencia en artifacts/context-1.7.1-tests.txt y artifacts/context-1.7.1-package/verification.txt. Recorrido físico de ratón pendiente.
+
+## Versión 1.7.0 — subtareas autorizadas 2026-10-12
+
+Un nivel, progreso, plegado, captura consecutiva y edición; completado automático y de conjunto con deshacer. Reordenamiento dentro de la principal, conversión desde tarea existente del mismo grupo sin pasos propios. Preservar árboles en grupos, borrado/deshacer y papelera, limpieza limitada a raíces completadas. Esquema 4, persistencia y pruebas de interfaz antes de preparar el portable.
+
+Completado localmente: build limpio, 60/60 pruebas, vistas WPF revisadas, portable 1.7.0.0 con hashes correctos. Migración y guardado/reinicio nativos verificados con datos aislados, conservando árboles, IDs, avance y plegado. Revisión física de arrastre y escalas mixtas pendiente.
+
+## Versión 1.6.0 — apariencia autorizada 2026-10-12
+
+Persistir letra, tamaño del principal y densidad general. Controles de apariencia en Configuración, recursos dinámicos globales y actualización de notificación. Mantener valores anteriores por defecto, clamping y proporciones del botón. Validar cambios en vivo, extremos, retorno a Mediano y reinicio con datos aislados antes de entregar el portable.
+
+Completado localmente: build limpio, 54/54 pruebas, renders WPF revisados, portable 1.6.0.0 y hashes verificados. Arranque/reinicio con apariencia grande guardada aprobado en datos aislados. Render nativo transparente; revisión física y escalas mixtas pendientes.
+
+## Versión 1.5.0 — minimizar principal autorizado 2026-10-10
+
+Quinta acción circular entre Salir y Configuración. Ocultar principal sin cerrar proceso ni listas. Reemplazar Mostrar Todo's del área de notificación por Mostrar botón / Ocultar botón dinámico. Validar cierre de popups, asociación, recuperación, menú de notificación y portable con datos aislados.
+
+Completado localmente: build limpio, 52/52 pruebas, renders WPF revisados y portable 1.5.0.0 extraído con hashes verificados. Arranque nativo aprobado con datos aislados. Captura del menú en modo render del portable incompleta; interacción física del área de notificación y apariencia del menú portable pendientes.
+
+## Versión 1.4.0 — ajustes y grupos autorizados 2026-10-10
+
+Acercar menú de listas ocultas, compactar papelera y corregir restaurar. Añadir subir/bajar grupos personalizados, acceso explícito para renombrar y vaciar completadas con deshacer de lote. Validar persistencia, regresiones, vistas WPF y portable.
+
+Completado localmente: build limpio, 51/51 pruebas, vistas revisadas y portable 1.4.0.0 extraído, hashes correctos, arranque y render nativos aprobados con datos aislados. Revisión física de ratón/multimonitor pendiente.
+
+## Versión 1.3.1 — ícono circular autorizado 2026-10-10
+
+Adaptar SVG/PNG/ICO a círculo y generar cada resolución desde vector. Verificar
+transparencia, recurso del ejecutable, regresiones y paquete portable.
+
+## Versión 1.3.0 — papelera autorizada 2026-10-10
+
+1. Persistir listas borradas completas y migrar esquema 2 a 3.
+2. Borrar directamente desde ventana y menú contextual de listas ocultas.
+3. Cuarta acción Papelera, restauración y eliminación definitiva con UI propia.
+4. Verificar snapshot/reinicio, regresiones WPF, renders y paquete portable.
+
+Estado: completado localmente; build limpio, 49/49 pruebas, renders WPF y portable
+1.3.0.0 verificado con datos aislados. Revisión física de ratón/multimonitor pendiente.
+
+Los apartados siguientes documentan versiones anteriores y el alcance histórico
+del MVP. La papelera de listas reemplaza la eliminación irreversible del MVP.
+
+## Versión 1.2.3 — ajustes autorizados 2026-10-10
+
+Homologar los botones flotantes con checks blancos más pequeños, fondos de
+acento y bordes finos. Conservar las ventanas de tareas. Build limpio y 45/45
+pruebas aprobadas; revisión de renders y paquete portable.
+
+## Versión 1.2.2 — ajustes autorizados 2026-10-10
+
+Oscurecer ligeramente botones de listas, checks negros y recuperar
+checkbox-checked.svg en configuración activada. Validar WPF y paquete portable.
+
+## Versión 1.2.1 — ajustes autorizados 2026-10-10
+
+1. Etiquetas laterales de mayor tamaño; principal solo en hover; espera de un segundo.
+2. Configuración centrada y sin acciones secundarias al abrir; scroll delgado.
+3. Igualar el fondo del principal al de la lista y usar check.svg en botones y tareas.
+4. Evitar reapertura cuando el clic principal minimiza una asociación visible.
+5. Validar regresión, renders WPF, compilación y paquete portable actualizado.
+
+Estado: implementación completada, build limpio y 45/45 pruebas aprobadas.
+Evidencia local en progreso.md; revisión física de mouse y monitores pendiente.
+
+## Versión 1.2.0 — alcance autorizado 2026-10-10
+
+1. Persistir la última lista minimizada y la opción de minimización automática
+   (desactivada inicialmente), conservando datos de esquema 2.
+2. Sustituir el botón PNG por círculo y check vectoriales. Clic izquierdo recupera
+   la lista asociada; sin asociación muestra las ocultas. Hover de 2 segundos
+   muestra las ocultas. Clic derecho muestra Salir, Configuración y Nueva lista.
+3. Mostrar botones redondos con etiquetas, animaciones y adaptación a pantalla.
+   Las acciones de clic derecho prevalecen sobre hover. Configuración conserva
+   el menú actual solo para inicio con Windows y minimización automática.
+4. Ocultar listas al hacer clic fuera cuando la preferencia esté activa, respetando
+   menús, diálogos y gestos internos. Eliminar la lista asociada vuelve al morado
+   original sin elegir otra. Conservar asociación al mostrarla y al reiniciar.
+5. Validar persistencia, interacciones WPF, revisión de renders y paquete 1.2.0;
+   actualizar documentación y distinguir pruebas locales de recorrido físico.
+
+Estado: implementación y validación local completadas. Release limpio, 44/44
+pruebas, renders y ZIP autocontenido verificados. La revisión física de gestos,
+clic fuera con otras aplicaciones y monitores de DPI mixto queda pendiente.
+Evidencia y detalle de las etapas en progreso.md, sección de versión 1.2.0.
+
 > **Estado de ejecución (actualizado 2026-09-17): completado.** Las etapas 0 a 11 fueron
 > implementadas y validadas en orden. La evidencia, comandos y resultados están
 > registrados en `/.codex/progreso.md`. El plan conserva la línea base 1.0.0

@@ -2,6 +2,10 @@ namespace Todos.Domain.Models;
 
 public sealed class TodoTaskItem
 {
+    public string NotesMarkdown { get; set; } = string.Empty;
+    public List<TodoTaskItem> Subtasks { get; set; } = [];
+    public bool AreSubtasksExpanded { get; set; } = true;
+
     public Guid Id { get; set; } = Guid.NewGuid();
 
     public string Text { get; set; } = string.Empty;

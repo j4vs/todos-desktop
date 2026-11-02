@@ -10,5 +10,7 @@ public sealed class AppState
 
     public List<TodoWindowState> TodoWindows { get; set; } = [];
 
+    public List<TodoWindowState> TrashedWindows { get; set; } = [];
+
     public DateTimeOffset LastSavedAt { get; set; }
 }

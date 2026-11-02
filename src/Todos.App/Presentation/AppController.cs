@@ -26,6 +26,9 @@ public sealed class AppController : IDisposable
     private NotificationAreaService? _notificationArea;
     private bool _isExiting;
     private bool _disposed;
+    private OutsideClickMonitor? _outsideClicks;
+    private RecycleBinWindow? _recycleBinWindow;
+    private RecycleBinViewModel? _recycleBinViewModel;
 
     public AppController(
         AppState state,
@@ -37,6 +40,7 @@ public sealed class AppController : IDisposable
     {
         _state = state;
         _saver = saver;
+        _saver.SaveCompleted += OnSaveCompleted;
         _loadWarning = loadWarning;
         _launchOptions = launchOptions;
         _startupRegistration = startupRegistration;
@@ -49,6 +53,7 @@ public sealed class AppController : IDisposable
 
     public async Task StartAsync()
     {
+        Todos.Presentation.Themes.AppearanceResources.Apply(_state.Settings);
         SynchronizeStartupRegistration();
         SubscribeToSystemEvents();
 
@@ -60,7 +65,13 @@ public sealed class AppController : IDisposable
             ShowHidden,
             DeleteHidden,
             ChangeStartupPreference,
-            ExitAsync)
+            ExitAsync,
+            _state.Settings.AutoMinimizeWindows,
+            enabled => { _state.Settings.AutoMinimizeWindows = enabled; ScheduleSave(); },
+            id => { if (_state.TodoWindows.FirstOrDefault(window => window.Id == id) is { } state) HideWindow(state); },
+            ShowRecycleBin,
+            HideLauncher,
+            _state.Settings, ApplyAppearance)
         {
             StatusMessage = _loadWarning ?? _loadStartupWarning,
         };
@@ -73,15 +84,23 @@ public sealed class AppController : IDisposable
         var position = WindowPositioning.EnsureVisible(
             _state.LauncherState.PositionX,
             _state.LauncherState.PositionY,
-            AppConstants.LauncherSize,
-            AppConstants.LauncherSize,
+            _launcherWindow.Width,
+            _launcherWindow.Height,
             area);
         _launcherWindow.Left = position.X;
         _launcherWindow.Top = position.Y;
 
         System.Windows.Application.Current.MainWindow = _launcherWindow;
         _launcherWindow.Show();
-        _notificationArea = new NotificationAreaService(ShowLauncher, CreateList, RequestExit);
+        _outsideClicks = new OutsideClickMonitor((point, primaryButton) =>
+        {
+            if (primaryButton && _launcherWindow.ContainsPrimaryButton(point)) _launcherWindow.CapturePrimaryClick();
+            return OnOutsideClick(point);
+        });
+        _notificationArea = new NotificationAreaService(ShowLauncher, CreateList, RequestExit, ToggleLauncherVisibility,
+            () => _launcherWindow?.IsVisible == true);
+        _notificationArea.UpdateAppearance(1 + _state.Settings.FontSizeStep * .1);
+        _launcherWindow.IsVisibleChanged += (_, _) => _notificationArea?.UpdateLauncherVisibility(_launcherWindow.IsVisible);
 
         foreach (var todoState in _state.TodoWindows.Where(window => window.IsVisible))
         {
@@ -90,9 +109,17 @@ public sealed class AppController : IDisposable
 
         RefreshHiddenWindows();
 
+        if (_launchOptions.RenderRecycleBinPreviewPath is not null)
+        {
+            ShowRecycleBin();
+            await Task.Delay(350);
+            await WindowPreviewRenderer.RenderPngAsync(_recycleBinWindow!, _launchOptions.RenderRecycleBinPreviewPath);
+            await ExitAsync();
+            return;
+        }
+
         if (_launchOptions.RenderLauncherPreviewPath is not null)
         {
-            _launcherViewModel.IsHiddenSubmenuOpen = _launcherViewModel.HasHiddenWindows;
             _launcherViewModel.IsMenuOpen = true;
             await Task.Delay(350);
             await WindowPreviewRenderer.RenderPngAsync(
@@ -102,6 +129,9 @@ public sealed class AppController : IDisposable
             var previewName = Path.GetFileNameWithoutExtension(_launchOptions.RenderLauncherPreviewPath);
             var previewExtension = Path.GetExtension(_launchOptions.RenderLauncherPreviewPath);
             var hiddenPreviewPath = Path.Combine(previewDirectory, $"{previewName}-hidden{previewExtension}");
+            _launcherViewModel.IsMenuOpen = false;
+            _launcherViewModel.ShowHiddenLists();
+            await Task.Delay(350);
             await WindowPreviewRenderer.RenderPngAsync(
                 _launcherWindow.HiddenSubmenuPreviewContent,
                 hiddenPreviewPath);
@@ -144,6 +174,8 @@ public sealed class AppController : IDisposable
                 CreateList();
             }
 
+            // An isolated smoke run must verify persistence even when no new list is needed.
+            if (_launchOptions.DataRoot is not null) ScheduleSave();
             await Task.Delay(_launchOptions.SmokeDelayMilliseconds);
             await ExitAsync();
         }
@@ -167,8 +199,11 @@ public sealed class AppController : IDisposable
         }
 
         _disposed = true;
+        _saver.SaveCompleted -= OnSaveCompleted;
+        _outsideClicks?.Dispose();
         UnsubscribeFromSystemEvents();
         _notificationArea?.Dispose();
+        _recycleBinWindow?.Close();
         _windowManager.CloseAll();
         if (!_isExiting)
         {
@@ -249,6 +284,8 @@ public sealed class AppController : IDisposable
 
     private void HideWindow(TodoWindowState state)
     {
+        if (!state.IsVisible || _isExiting) return;
+        _state.LauncherState.LastMinimizedWindowId = state.Id;
         _windowManager.Hide(state);
         RefreshHiddenWindows();
         ScheduleSave();
@@ -265,21 +302,68 @@ public sealed class AppController : IDisposable
 
     private void RequestDelete(TodoWindowState state)
     {
-        var result = MessageBox.Show(
-            $"¿Quieres eliminar la lista “{TodoText.NormalizeTitle(state.Title)}”?\n\nEsta acción no tiene papelera.",
-            "Eliminar lista",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning,
-            System.Windows.MessageBoxResult.No);
-        if (result != System.Windows.MessageBoxResult.Yes)
-        {
-            return;
-        }
-
+        if (!RecycleBinOperations.MoveToTrash(_state, state.Id, DateTimeOffset.UtcNow)) return;
         _windowManager.Remove(state);
-        _state.TodoWindows.Remove(state);
+        _recycleBinViewModel?.Refresh(_state.TrashedWindows);
         RefreshHiddenWindows();
         ScheduleSave();
+    }
+
+    private void ShowRecycleBin()
+    {
+        CloseLauncherMenu();
+        if (_recycleBinWindow is null)
+        {
+            _recycleBinViewModel = new RecycleBinViewModel(RestoreFromTrash, DeletePermanently);
+            _recycleBinWindow = new RecycleBinWindow(_recycleBinViewModel);
+            _recycleBinWindow.Closed += (_, _) => { _recycleBinWindow = null; _recycleBinViewModel = null; };
+            var area = _displayService.GetBestWorkingArea(_launcherWindow?.Left, _launcherWindow?.Top);
+            _recycleBinWindow.Width = Math.Min(460, area.Width - 16);
+            _recycleBinWindow.Height = Math.Min(520, area.Height - 16);
+            var position = WindowPositioning.EnsureVisible(_launcherWindow?.Left, _launcherWindow?.Top,
+                _recycleBinWindow.Width, _recycleBinWindow.Height, area);
+            _recycleBinWindow.Left = position.X;
+            _recycleBinWindow.Top = position.Y;
+        }
+        _recycleBinViewModel!.Refresh(_state.TrashedWindows);
+        _recycleBinWindow.Show();
+        _recycleBinWindow.Activate();
+    }
+
+    private void RestoreFromTrash(Guid id)
+    {
+        if (RecycleBinOperations.Restore(_state, id) is not { } state) return;
+        _windowManager.Show(state);
+        _recycleBinViewModel?.Refresh(_state.TrashedWindows);
+        RefreshHiddenWindows();
+        ScheduleSave();
+    }
+
+    private void DeletePermanently(Guid id)
+    {
+        if (!RecycleBinOperations.DeletePermanently(_state, id)) return;
+        _recycleBinViewModel?.Refresh(_state.TrashedWindows);
+        ScheduleSave();
+    }
+
+    private void ApplyAppearance()
+    {
+        Todos.Presentation.Themes.AppearanceResources.Apply(_state.Settings);
+        _notificationArea?.UpdateAppearance(1 + _state.Settings.FontSizeStep * .1);
+        if (_launcherWindow is not null) OnLauncherPositionCommitted(_launcherWindow.Left, _launcherWindow.Top);
+        ScheduleSave();
+    }
+
+    private void HideLauncher() =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _launcherWindow?.MinimizeLauncher());
+
+    private void ToggleLauncherVisibility()
+    {
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (_launcherWindow?.IsVisible == true) HideLauncher();
+            else ShowLauncher();
+        });
     }
 
     private void ShowLauncher()
@@ -296,8 +380,8 @@ public sealed class AppController : IDisposable
         var position = WindowPositioning.EnsureVisible(
             x,
             y,
-            AppConstants.LauncherSize,
-            AppConstants.LauncherSize,
+            _launcherWindow?.Width ?? AppConstants.LauncherWidth,
+            _launcherWindow?.Height ?? AppConstants.LauncherHeight,
             area);
 
         if (_launcherWindow is not null)
@@ -311,9 +395,57 @@ public sealed class AppController : IDisposable
         ScheduleSave();
     }
 
-    private void RefreshHiddenWindows() => _launcherViewModel?.RefreshHiddenWindows(_state.TodoWindows);
+    private void RefreshHiddenWindows()
+    {
+        _launcherViewModel?.RefreshHiddenWindows(_state.TodoWindows);
+        _launcherViewModel?.RefreshAssociation(_state.TodoWindows, _state.LauncherState.LastMinimizedWindowId);
+    }
 
-    private void ScheduleSave() => _saver.Schedule(_state);
+    private Action OnOutsideClick(System.Windows.Point screenPoint)
+    {
+        // Capture before the clicked button can show a formerly hidden window.
+        var closeLauncher = _launcherWindow is not null && !_launcherWindow.ContainsInteraction(screenPoint);
+        var candidates = _state.Settings.AutoMinimizeWindows && !_isExiting
+            ? _state.TodoWindows.Where(state => state.IsVisible &&
+                _windowManager.GetWindow(state.Id) is { } window && !window.ContainsInteraction(screenPoint)).ToArray()
+            : [];
+        return () =>
+        {
+            if (_isExiting) return;
+            if (closeLauncher) _launcherWindow?.DismissPanels();
+            if (!_state.Settings.AutoMinimizeWindows) return;
+            foreach (var state in candidates)
+            {
+                if (_state.TodoWindows.Contains(state)) HideWindow(state);
+            }
+        };
+    }
+
+    private void ScheduleSave()
+    {
+        _launcherViewModel?.RefreshAssociation(_state.TodoWindows, _state.LauncherState.LastMinimizedWindowId);
+        _saver.Schedule(_state);
+    }
+
+    private void OnSaveCompleted(AppState snapshot, Exception? error)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.HasShutdownStarted) return;
+        dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_disposed) return;
+            foreach (var id in _windowManager.CreatedWindowIds)
+            {
+                if (_windowManager.GetWindow(id)?.DataContext is not TodoWindowViewModel vm) continue;
+                var savedTasks = snapshot.TodoWindows.FirstOrDefault(window => window.Id == id)?.Tasks
+                    .SelectMany(root => new[] { root }.Concat(root.Subtasks)).ToDictionary(task => task.Id);
+                if (savedTasks is null) continue;
+                foreach (var task in vm.PendingTasks.Concat(vm.CompletedTasks).SelectMany(root => new[] { root }.Concat(root.Subtasks)))
+                    if (savedTasks.TryGetValue(task.Id, out var saved) && saved.NotesMarkdown == task.NotesMarkdown)
+                        task.NotesSaveStatus = error is null ? "Guardado" : "No se pudo guardar. Conserva una copia con Exportar.";
+            }
+        }));
+    }
 
     private bool ChangeStartupPreference(bool enable)
     {
@@ -352,7 +484,8 @@ public sealed class AppController : IDisposable
     {
         if (_launchOptions.IsSmokeTest ||
             _launchOptions.RenderPreviewPath is not null ||
-            _launchOptions.RenderLauncherPreviewPath is not null)
+            _launchOptions.RenderLauncherPreviewPath is not null ||
+            _launchOptions.RenderRecycleBinPreviewPath is not null)
         {
             return;
         }
@@ -393,20 +526,33 @@ public sealed class AppController : IDisposable
         Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
     }
 
-    private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
-        System.Windows.Application.Current.Dispatcher.BeginInvoke(RevalidateWindowPositions);
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => QueueInteractionRecovery();
+
+    private void QueueInteractionRecovery()
+    {
+        if (_disposed || _isExiting) return;
+        _outsideClicks?.InvalidatePendingClicks();
+        System.Windows.Application.Current.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Send, new Action(() =>
+        {
+            if (_disposed || _isExiting) return;
+            try { _outsideClicks?.Restart(); }
+            catch (System.ComponentModel.Win32Exception exception) { _log.Error("Outside-click monitor could not be renewed.", exception); }
+            RevalidateWindowPositions();
+        }));
+    }
 
     private void OnPowerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
         if (e.Mode == Microsoft.Win32.PowerModes.Suspend)
         {
+            _outsideClicks?.InvalidatePendingClicks();
             _ = FlushBeforeSuspendAsync();
             return;
         }
 
         if (e.Mode == Microsoft.Win32.PowerModes.Resume)
         {
-            System.Windows.Application.Current.Dispatcher.BeginInvoke(RevalidateWindowPositions);
+            QueueInteractionRecovery();
         }
     }
 
@@ -438,7 +584,8 @@ public sealed class AppController : IDisposable
     {
         if (_launcherViewModel is not null)
         {
-            _launcherViewModel.IsMenuOpen = false;
+            _launcherWindow?.DismissPanels();
+            _launcherViewModel.ClosePanels();
         }
     }
 
@@ -471,7 +618,9 @@ public sealed class AppController : IDisposable
             return;
         }
 
+        _outsideClicks?.Dispose();
         _notificationArea?.Dispose();
+        _recycleBinWindow?.Close();
         _windowManager.CloseAll();
         if (_launcherWindow is not null)
         {

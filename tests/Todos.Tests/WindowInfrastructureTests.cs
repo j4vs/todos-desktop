@@ -14,6 +14,8 @@ internal static class WindowInfrastructureTests
         Assert.True(first.InstanceName != second.InstanceName);
         Assert.True(first.InstanceName != "Todos");
         Assert.Equal(first.InstanceName, render.InstanceName);
+        var bin = AppLaunchOptions.Parse(["--render-recycle-bin-preview", "C:\\Temp\\bin.png", "--data-root", "C:\\Temp\\todos-first"]);
+        Assert.Equal(first.InstanceName, bin.InstanceName);
         Assert.Equal("Todos", Todos.Application.AppLaunchOptions.Parse([]).InstanceName);
         Assert.Equal("Todos", Todos.Application.AppLaunchOptions.Parse(["--autostart"]).InstanceName);
     }
@@ -43,13 +45,14 @@ internal static class WindowInfrastructureTests
         var launcherPreview = System.IO.Path.Combine(root, "launcher.png");
         var options = AppLaunchOptions.Parse([
             "--autostart", "--smoke-test", "--data-root", root, "--render-preview", preview,
-            "--render-launcher-preview", launcherPreview, "--preview-editing", "--smoke-delay", "4500",
+            "--render-launcher-preview", launcherPreview, "--render-recycle-bin-preview", preview, "--preview-editing", "--smoke-delay", "4500",
         ]);
         Assert.True(options.IsAutoStart);
         Assert.True(options.IsSmokeTest);
         Assert.Equal(System.IO.Path.GetFullPath(root), options.DataRoot);
         Assert.Equal(System.IO.Path.GetFullPath(preview), options.RenderPreviewPath);
         Assert.Equal(System.IO.Path.GetFullPath(launcherPreview), options.RenderLauncherPreviewPath);
+        Assert.Equal(System.IO.Path.GetFullPath(preview), options.RenderRecycleBinPreviewPath);
         Assert.True(options.RenderPreviewEditing);
         Assert.Equal(4500, options.SmokeDelayMilliseconds);
     }
